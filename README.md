@@ -38,7 +38,7 @@ Sıradan profesyonel ağların aksine, **Swipe (Kaydırma)** mekaniğini modern 
 
 ---
 
-## 🛠️ Teknoloji Yığını
+## 🛠️ Tech Stack
 
 ### Mobil (Frontend)
 *   **Dil & Framework:** Swift + SwiftUI (iOS 16+)
