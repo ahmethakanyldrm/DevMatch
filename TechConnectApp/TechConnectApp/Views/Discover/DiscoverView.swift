@@ -2,23 +2,28 @@ import SwiftUI
 
 struct DiscoverView: View {
     @StateObject private var dataService = MockDataService.shared
+    @Environment(\.colorScheme) var colorScheme
     @State private var activeProfiles: [DeveloperProfile] = []
     @State private var swipeStates: [UUID: CGFloat] = [:] // Keeps track of translation X for each card
     @State private var showMatchOverlay = false
     @State private var matchedProfile: DeveloperProfile? = nil
     
+    private var backgroundColor: Color {
+        colorScheme == .dark ? Color(red: 0.05, green: 0.05, blue: 0.1) : Color(red: 0.96, green: 0.96, blue: 0.98)
+    }
+    
     var body: some View {
         ZStack {
-            // Background color
-            Color(red: 0.05, green: 0.05, blue: 0.1)
+            // Dynamic theme background color
+            backgroundColor
                 .ignoresSafeArea()
             
             VStack {
                 // Custom Header
                 HStack {
-                    Text("Keşfet")
+                    Text(Localization.string("discover", lang: dataService.appLanguage))
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     
                     Spacer()
                     
@@ -30,7 +35,7 @@ struct DiscoverView: View {
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.purple)
                             .padding(10)
-                            .background(Color.white.opacity(0.08))
+                            .background(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
                             .clipShape(Circle())
                     }
                 }
@@ -51,20 +56,21 @@ struct DiscoverView: View {
                                         endPoint: .bottom
                                     )
                                 )
-                            Text("Buralarda Kimse Kalmadı!")
+                            Text(Localization.string("empty_deck", lang: dataService.appLanguage))
                                 .font(.title3)
                                 .fontWeight(.bold)
-                                .foregroundColor(.white)
-                            Text("Teknoloji yığınını düzenleyerek veya Keşfet'i yenileyerek yeni profiller bulabilirsin.")
+                                .foregroundColor(.primary)
+                            
+                            Text(Localization.string("empty_deck_desc", lang: dataService.appLanguage))
                                 .font(.subheadline)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
                             
                             Button(action: {
                                 activeProfiles = dataService.profiles
                             }) {
-                                Text("Desteyi Yenile")
+                                Text(Localization.string("refresh_deck", lang: dataService.appLanguage))
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 24)
@@ -147,7 +153,7 @@ struct DiscoverView: View {
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.red)
                                 .frame(width: 64, height: 64)
-                                .background(Color.white.opacity(0.08))
+                                .background(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
                                 .clipShape(Circle())
                                 .overlay(
                                     Circle()
@@ -165,7 +171,7 @@ struct DiscoverView: View {
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.green)
                                 .frame(width: 64, height: 64)
-                                .background(Color.white.opacity(0.08))
+                                .background(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
                                 .clipShape(Circle())
                                 .overlay(
                                     Circle()
@@ -201,7 +207,7 @@ struct DiscoverView: View {
             activeProfiles.removeAll(where: { $0.id == profile.id })
             swipeStates.removeValue(forKey: profile.id)
             
-            // Mock matching logic (e.g. 50% chance of match on right swipe)
+            // Mock matching logic
             if right && Double.random(in: 0...1) > 0.4 {
                 matchedProfile = profile
                 withAnimation(.spring()) {
@@ -209,7 +215,7 @@ struct DiscoverView: View {
                 }
                 
                 // Add to matches in service
-                let newMatch = Match(id: UUID(), profile: profile, matchedAt: Date(), lastMessage: "Şimdi eşleştiniz! Merhaba deyin.")
+                let newMatch = Match(id: UUID(), profile: profile, matchedAt: Date(), lastMessage: Localization.string("chat_start_helper", lang: dataService.appLanguage))
                 dataService.matches.insert(newMatch, at: 0)
                 dataService.messagesByMatch[newMatch.id] = []
             }
@@ -225,30 +231,36 @@ struct DeveloperCardView: View {
     var onSwipeLeft: () -> Void
     var onSwipeRight: () -> Void
     
+    @Environment(\.colorScheme) var colorScheme
+    @StateObject private var dataService = MockDataService.shared
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .bottom) {
-                // Card Photo (Mocked via SF Symbols and beautiful color backgrounds)
+                // Card Photo container
                 RoundedRectangle(cornerRadius: 24)
                     .fill(
                         LinearGradient(
-                            colors: [
+                            colors: colorScheme == .dark ? [
                                 Color(red: 0.12, green: 0.12, blue: 0.22),
                                 Color(red: 0.08, green: 0.08, blue: 0.15)
+                            ] : [
+                                Color(red: 0.9, green: 0.9, blue: 0.95),
+                                Color(red: 0.85, green: 0.85, blue: 0.9)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                 
-                // Heart graphic in card background
+                // Avatar symbol in card background
                 VStack {
                     Spacer()
                     Image(systemName: profile.photoNames.first ?? "person.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 140, height: 140)
-                        .foregroundColor(.white.opacity(0.15))
+                        .foregroundColor(colorScheme == .dark ? .white.opacity(0.12) : .black.opacity(0.08))
                     Spacer()
                 }
                 
@@ -259,7 +271,7 @@ struct DeveloperCardView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "bolt.fill")
                                 .font(.system(size: 13))
-                            Text("%\(min(score * 8, 100)) Uyum")
+                            Text("%\(min(score * 8, 100)) \(Localization.string("compatibility", lang: dataService.appLanguage))")
                                 .font(.system(size: 13, weight: .bold))
                         }
                         .padding(.horizontal, 12)
@@ -275,7 +287,7 @@ struct DeveloperCardView: View {
                                 )
                         )
                         .foregroundColor(.white)
-                        .shadow(color: .purple.opacity(0.5), radius: 8, x: 0, y: 3)
+                        .shadow(color: .purple.opacity(0.4), radius: 8, x: 0, y: 3)
                     }
                     Spacer()
                 }
@@ -286,7 +298,7 @@ struct DeveloperCardView: View {
                     VStack {
                         HStack {
                             if translation > 0 {
-                                Text("BEĞEN")
+                                Text(Localization.string("like", lang: dataService.appLanguage))
                                     .font(.title)
                                     .fontWeight(.black)
                                     .foregroundColor(.green)
@@ -300,7 +312,7 @@ struct DeveloperCardView: View {
                                 Spacer()
                             } else {
                                 Spacer()
-                                Text("PAS")
+                                Text(Localization.string("pass", lang: dataService.appLanguage))
                                     .font(.title)
                                     .fontWeight(.black)
                                     .foregroundColor(.red)
@@ -327,7 +339,7 @@ struct DeveloperCardView: View {
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(.white)
                             
-                            Text("\(profile.role) • \(profile.experienceYears) Yıl")
+                            Text("\(profile.role) • \(profile.experienceYears) \(Localization.string("stepper_label", lang: dataService.appLanguage))")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.gray.opacity(0.9))
                         }
@@ -339,14 +351,14 @@ struct DeveloperCardView: View {
                             .fontWeight(.semibold)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(Color.white.opacity(0.12))
+                            .background(Color.white.opacity(0.15))
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
                     
                     Text(profile.bio)
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.white.opacity(0.85))
                         .lineLimit(3)
                     
                     // Tech stack tag layout
@@ -362,8 +374,8 @@ struct DeveloperCardView: View {
                                         .font(.system(size: 12, weight: .semibold))
                                         .padding(.horizontal, 10)
                                         .padding(.vertical, 5)
-                                        .background(Color.purple.opacity(0.2))
-                                        .foregroundColor(.purple.opacity(0.9))
+                                        .background(Color.purple.opacity(0.25))
+                                        .foregroundColor(.purple.opacity(0.95))
                                         .cornerRadius(8)
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 8)
@@ -379,10 +391,10 @@ struct DeveloperCardView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "briefcase.fill")
                             .font(.system(size: 12))
-                        Text("Hedef: \(profile.lookingFor.rawValue)")
+                        Text("\(Localization.string("target", lang: dataService.appLanguage)): \(profile.lookingFor.rawValue)")
                             .font(.system(size: 12, weight: .semibold))
                     }
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.white.opacity(0.75))
                 }
                 .padding(24)
                 .background(
@@ -397,9 +409,9 @@ struct DeveloperCardView: View {
             .cornerRadius(24)
             .overlay(
                 RoundedRectangle(cornerRadius: 24)
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1.5)
+                    .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08), lineWidth: 1.5)
             )
-            .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 10)
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.35 : 0.15), radius: 15, x: 0, y: 10)
             .rotationEffect(.degrees(Double(translation / 15)))
             .offset(x: translation, y: 0)
         }

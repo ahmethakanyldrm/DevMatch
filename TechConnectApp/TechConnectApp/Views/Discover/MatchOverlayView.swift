@@ -4,6 +4,7 @@ struct MatchOverlayView: View {
     var profile: DeveloperProfile
     var onDismiss: () -> Void
     
+    @StateObject private var dataService = MockDataService.shared
     @State private var animateScale = false
     
     var body: some View {
@@ -21,7 +22,7 @@ struct MatchOverlayView: View {
             VStack(spacing: 35) {
                 // Match Header
                 VStack(spacing: 8) {
-                    Text("BAĞLANTI KURULDU!")
+                    Text(Localization.string("match_title", lang: dataService.appLanguage))
                         .font(.system(size: 36, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -34,7 +35,7 @@ struct MatchOverlayView: View {
                         .scaleEffect(animateScale ? 1.0 : 0.7)
                         .opacity(animateScale ? 1.0 : 0.0)
                     
-                    Text("İki taraf da birbiriyle eşleşti.")
+                    Text(Localization.string("match_desc", lang: dataService.appLanguage))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
                 }
@@ -101,7 +102,7 @@ struct MatchOverlayView: View {
                     Button(action: {
                         onDismiss()
                     }) {
-                        Text("Hemen Mesaj Gönder")
+                        Text(Localization.string("match_send_message", lang: dataService.appLanguage))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -120,7 +121,7 @@ struct MatchOverlayView: View {
                     Button(action: {
                         onDismiss()
                     }) {
-                        Text("Kaydırmaya Devam Et")
+                        Text(Localization.string("match_continue", lang: dataService.appLanguage))
                             .fontWeight(.semibold)
                             .foregroundColor(.white.opacity(0.6))
                     }

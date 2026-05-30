@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
+    @StateObject private var dataService = MockDataService.shared
     @State private var startAnimation = false
     @State private var showPanel = false
     @Binding var isLoggedIn: Bool
@@ -84,7 +85,7 @@ struct LoginView: View {
                 // Login Buttons Box (Glassmorphic Panel)
                 if showPanel {
                     VStack(spacing: 18) {
-                        Text("Profesyonel eşleşmeye başlamak için giriş yapın.")
+                        Text(Localization.string("login_desc", lang: dataService.appLanguage))
                             .font(.system(size: 14, weight: .regular))
                             .foregroundColor(.white.opacity(0.6))
                             .multilineTextAlignment(.center)
@@ -99,7 +100,7 @@ struct LoginView: View {
                             HStack {
                                 Image(systemName: "terminal.fill")
                                     .font(.title2)
-                                Text("GitHub ile Giriş Yap")
+                                Text(Localization.string("login_github", lang: dataService.appLanguage))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -128,7 +129,7 @@ struct LoginView: View {
                             HStack {
                                 Image(systemName: "applelogo")
                                     .font(.title2)
-                                Text("Apple ile Giriş Yap")
+                                Text(Localization.string("login_apple", lang: dataService.appLanguage))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -144,7 +145,7 @@ struct LoginView: View {
                                 isLoggedIn = true
                             }
                         }) {
-                            Text("Misafir Olarak Keşfet")
+                            Text(Localization.string("login_guest", lang: dataService.appLanguage))
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.purple.opacity(0.9))
                         }
@@ -173,7 +174,7 @@ struct LoginView: View {
                 }
                 
                 // Terms and Conditions
-                Text("Giriş yaparak, Kullanım Şartları ve Gizlilik Politikası'nı kabul etmiş olursunuz.")
+                Text(Localization.string("login_terms", lang: dataService.appLanguage))
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.4))
                     .multilineTextAlignment(.center)

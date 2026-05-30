@@ -2,12 +2,12 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @StateObject private var dataService = MockDataService.shared
     
-    // Configure standard dark tab bar appearance on iOS
+    // Configure dynamic tab bar appearance to respect Light/Dark theme natively
     init() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1.0)
+        appearance.configureWithDefaultBackground() // automatically adjusts to light/dark system settings
         
         // Unselected item tint
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor.gray
@@ -25,19 +25,28 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             DiscoverView()
                 .tabItem {
-                    Label("Keşfet", systemImage: "sparkles")
+                    Label(
+                        Localization.string("discover", lang: dataService.appLanguage),
+                        systemImage: "sparkles"
+                    )
                 }
                 .tag(0)
             
             ChatsListView()
                 .tabItem {
-                    Label("Mesajlar", systemImage: "bubble.left.and.bubble.right.fill")
+                    Label(
+                        Localization.string("messages", lang: dataService.appLanguage),
+                        systemImage: "bubble.left.and.bubble.right.fill"
+                    )
                 }
                 .tag(1)
             
             ProfileView()
                 .tabItem {
-                    Label("Profilim", systemImage: "person.crop.circle.fill")
+                    Label(
+                        Localization.string("profile", lang: dataService.appLanguage),
+                        systemImage: "person.crop.circle.fill"
+                    )
                 }
                 .tag(2)
         }

@@ -10,14 +10,18 @@ import SwiftUI
 @main
 struct TechConnectAppApp: App {
     @State private var isLoggedIn = false
+    @StateObject private var dataService = MockDataService.shared
     
     var body: some Scene {
         WindowGroup {
-            if isLoggedIn {
-                MainTabView()
-            } else {
-                LoginView(isLoggedIn: $isLoggedIn)
+            Group {
+                if isLoggedIn {
+                    MainTabView()
+                } else {
+                    LoginView(isLoggedIn: $isLoggedIn)
+                }
             }
+            .preferredColorScheme(dataService.appTheme.colorScheme)
         }
     }
 }

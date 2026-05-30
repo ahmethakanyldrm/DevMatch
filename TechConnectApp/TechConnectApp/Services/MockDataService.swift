@@ -9,6 +9,8 @@ class MockDataService: ObservableObject {
     @Published var matches: [Match] = []
     @Published var messagesByMatch: [UUID: [Message]] = [:]
     @Published var coffeeChatRequests: [CoffeeChatRequest] = []
+    @Published var appTheme: AppTheme = .system
+    @Published var appLanguage: AppLanguage = AppLanguage.defaultLanguage()
     
     init() {
         // Initialize current user (mock backend developer)

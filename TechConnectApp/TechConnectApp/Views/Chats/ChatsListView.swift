@@ -2,25 +2,30 @@ import SwiftUI
 
 struct ChatsListView: View {
     @StateObject private var dataService = MockDataService.shared
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var backgroundColor: Color {
+        colorScheme == .dark ? Color(red: 0.05, green: 0.05, blue: 0.1) : Color(red: 0.96, green: 0.96, blue: 0.98)
+    }
     
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.05, green: 0.05, blue: 0.1)
+                backgroundColor
                     .ignoresSafeArea()
                 
                 VStack(alignment: .leading) {
-                    Text("Bağlantılarım")
+                    Text(Localization.string("connections", lang: dataService.appLanguage))
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
                     
                     // Horizontal Matches list (New Connections)
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Yeni Eşleşmeler")
+                        Text(Localization.string("new_matches", lang: dataService.appLanguage))
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.gray.opacity(0.8))
+                            .foregroundColor(.secondary)
                             .padding(.horizontal, 20)
                         
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -47,13 +52,13 @@ struct ChatsListView: View {
                                             }
                                             .overlay(
                                                 Circle()
-                                                    .stroke(Color.white.opacity(0.1), lineWidth: 1.5)
+                                                    .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08), lineWidth: 1.5)
                                             )
                                             
                                             Text(match.profile.displayName.components(separatedBy: " ").first ?? "")
                                                 .font(.caption)
                                                 .fontWeight(.semibold)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.primary)
                                                 .frame(width: 80)
                                                 .lineLimit(1)
                                         }
@@ -66,7 +71,7 @@ struct ChatsListView: View {
                     .padding(.vertical, 10)
                     
                     Divider()
-                        .background(Color.white.opacity(0.1))
+                        .background(colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.08))
                         .padding(.vertical, 5)
                     
                     // Vertical Messages List
@@ -77,13 +82,15 @@ struct ChatsListView: View {
                                     Spacer()
                                     Image(systemName: "message.fill")
                                         .font(.system(size: 50))
-                                        .foregroundColor(.gray)
-                                    Text("Henüz Mesaj Yok")
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text(Localization.string("no_messages", lang: dataService.appLanguage))
                                         .font(.headline)
-                                        .foregroundColor(.white)
-                                    Text("Keşfet ekranından beğendiğin geliştiricilerle eşleşerek sohbeti başlatabilirsin.")
+                                        .foregroundColor(.primary)
+                                    
+                                    Text(Localization.string("no_messages_desc", lang: dataService.appLanguage))
                                         .font(.subheadline)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.secondary)
                                         .multilineTextAlignment(.center)
                                         .padding(.horizontal, 40)
                                     Spacer()
@@ -97,7 +104,7 @@ struct ChatsListView: View {
                                     .buttonStyle(.plain)
                                     
                                     Divider()
-                                        .background(Color.white.opacity(0.08))
+                                        .background(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
                                         .padding(.leading, 85)
                                 }
                             }
@@ -115,20 +122,21 @@ struct ChatsListView: View {
 // Chat Row View component
 struct ChatRowView: View {
     var match: Match
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         HStack(spacing: 15) {
             // Profile photo
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.08))
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
                     .frame(width: 58, height: 58)
                 
                 Image(systemName: match.profile.photoNames.first ?? "person.fill")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 28, height: 28)
-                    .foregroundColor(.white)
+                    .foregroundColor(colorScheme == .dark ? .white : .primary)
             }
             .overlay(
                 Circle()
@@ -139,18 +147,18 @@ struct ChatRowView: View {
                 HStack {
                     Text(match.profile.displayName)
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     
                     Spacer()
                     
                     Text("14:32") // Mock message time
                         .font(.system(size: 11))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                 }
                 
-                Text(match.lastMessage ?? "Henüz mesaj gönderilmedi.")
+                Text(match.lastMessage ?? "")
                     .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
             }
         }

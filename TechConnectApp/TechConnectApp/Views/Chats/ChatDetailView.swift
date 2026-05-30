@@ -3,14 +3,27 @@ import SwiftUI
 struct ChatDetailView: View {
     var match: Match
     @StateObject private var dataService = MockDataService.shared
+    @Environment(\.colorScheme) var colorScheme
     @State private var messageText = ""
     @State private var showCoffeeChatSheet = false
     @State private var proposedTime = Date()
     @State private var activeRequests: [CoffeeChatRequest] = []
     
+    private var backgroundColor: Color {
+        colorScheme == .dark ? Color(red: 0.05, green: 0.05, blue: 0.1) : Color(red: 0.96, green: 0.96, blue: 0.98)
+    }
+    
+    private var inputBackgroundColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.05)
+    }
+    
+    private var borderColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.15) : Color.black.opacity(0.08)
+    }
+    
     var body: some View {
         ZStack {
-            Color(red: 0.05, green: 0.05, blue: 0.1)
+            backgroundColor
                 .ignoresSafeArea()
             
             VStack {
@@ -19,10 +32,10 @@ struct ChatDetailView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(match.profile.displayName)
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                         Text(match.profile.role)
                             .font(.caption)
-                            .foregroundColor(.gray)
+                            .foregroundColor(.secondary)
                     }
                     Spacer()
                     
@@ -32,7 +45,7 @@ struct ChatDetailView: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "cup.and.saucer.fill")
-                            Text("Kahve Daveti")
+                            Text(Localization.string("coffee_chat_invite", lang: dataService.appLanguage))
                                 .fontWeight(.semibold)
                         }
                         .font(.caption)
@@ -51,7 +64,7 @@ struct ChatDetailView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .background(Color.white.opacity(0.03))
+                .background(colorScheme == .dark ? Color.white.opacity(0.03) : Color.black.opacity(0.02))
                 
                 // Messages Scroll List
                 ScrollViewReader { proxy in
@@ -92,15 +105,16 @@ struct ChatDetailView: View {
                 
                 // Bottom input bar
                 HStack(spacing: 12) {
-                    TextField("Mesajınızı yazın...", text: $messageText)
+                    TextField(Localization.string("chat_placeholder", lang: dataService.appLanguage), text: $messageText)
+                        .font(.system(size: 15))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
-                        .background(Color.white.opacity(0.08))
-                        .foregroundColor(.white)
+                        .background(inputBackgroundColor)
+                        .foregroundColor(.primary)
                         .cornerRadius(20)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                                .stroke(borderColor, lineWidth: 1)
                         )
                     
                     Button(action: {
@@ -124,7 +138,7 @@ struct ChatDetailView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .background(Color.black.opacity(0.2))
+                .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white.opacity(0.8))
             }
             
             // Propose Coffee Chat Sheet
@@ -160,6 +174,8 @@ struct ChatDetailView: View {
 struct MessageBubble: View {
     var message: Message
     var isCurrentUser: Bool
+    @Environment(\.colorScheme) var colorScheme
+    @StateObject private var dataService = MockDataService.shared
     
     var body: some View {
         HStack {
@@ -168,27 +184,35 @@ struct MessageBubble: View {
             VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 4) {
                 Text(message.content)
                     .font(.system(size: 15))
-                    .foregroundColor(isCurrentUser ? .white : .white.opacity(0.9))
+                    .foregroundColor(isCurrentUser ? .white : .primary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(
                         isCurrentUser ?
-                        LinearGradient(
-                            colors: [.purple, .blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                        AnyView(
+                            LinearGradient(
+                                colors: [.purple, .blue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         ) :
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.12), Color.white.opacity(0.08)],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                        AnyView(
+                            LinearGradient(
+                                colors: colorScheme == .dark ? [Color.white.opacity(0.12), Color.white.opacity(0.08)] : [Color.black.opacity(0.06), Color.black.opacity(0.04)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
                     )
                     .cornerRadius(18)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(isCurrentUser ? Color.clear : (colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.05)), lineWidth: 1)
+                    )
                 
                 Text(formatDate(message.sentAt))
                     .font(.system(size: 10))
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
                     .padding(.horizontal, 4)
             }
             
@@ -207,6 +231,8 @@ struct MessageBubble: View {
 // Coffee Chat Invite Status Card component
 struct CoffeeChatCard: View {
     var request: CoffeeChatRequest
+    @StateObject private var dataService = MockDataService.shared
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(spacing: 12) {
@@ -219,13 +245,13 @@ struct CoffeeChatCard: View {
                     .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Kahve Sohbeti Daveti")
+                    Text(Localization.string("coffee_chat_title", lang: dataService.appLanguage))
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     
                     Text(formatProposedTime(request.proposedTime))
                         .font(.system(size: 12))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.secondary)
                 }
                 Spacer()
                 
@@ -241,17 +267,18 @@ struct CoffeeChatCard: View {
             }
         }
         .padding(16)
-        .background(Color.white.opacity(0.06))
+        .background(colorScheme == .dark ? Color.white.opacity(0.06) : Color.white)
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
         )
+        .shadow(color: .black.opacity(colorScheme == .dark ? 0.0 : 0.05), radius: 5, y: 2)
     }
     
     private func formatProposedTime(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.locale = Locale(identifier: dataService.appLanguage.rawValue)
         formatter.dateFormat = "d MMMM yyyy, EEEE HH:mm"
         return formatter.string(from: date)
     }
@@ -263,6 +290,9 @@ struct CoffeeChatSetupSheet: View {
     @Binding var proposedTime: Date
     var onSubmit: () -> Void
     
+    @StateObject private var dataService = MockDataService.shared
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         ZStack {
             Color.black.opacity(0.6)
@@ -272,11 +302,11 @@ struct CoffeeChatSetupSheet: View {
                 }
             
             VStack(spacing: 20) {
-                Text("Kahve Sohbeti Planla")
+                Text(Localization.string("coffee_chat_plan", lang: dataService.appLanguage))
                     .font(.headline)
                     .foregroundColor(.white)
                 
-                DatePicker("Tarih ve Saat", selection: $proposedTime, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                DatePicker(Localization.string("date_and_time", lang: dataService.appLanguage), selection: $proposedTime, in: Date()..., displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.wheel)
                     .colorScheme(.dark)
                     .labelsHidden()
@@ -285,7 +315,7 @@ struct CoffeeChatSetupSheet: View {
                     Button(action: {
                         showSheet = false
                     }) {
-                        Text("İptal")
+                        Text(Localization.string("cancel", lang: dataService.appLanguage))
                             .fontWeight(.semibold)
                             .foregroundColor(.white.opacity(0.6))
                             .frame(maxWidth: .infinity)
@@ -297,7 +327,7 @@ struct CoffeeChatSetupSheet: View {
                     Button(action: {
                         onSubmit()
                     }) {
-                        Text("Davet Gönder")
+                        Text(Localization.string("send_invite", lang: dataService.appLanguage))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)

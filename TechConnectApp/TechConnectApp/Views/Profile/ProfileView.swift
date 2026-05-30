@@ -43,7 +43,7 @@ struct ProfileView: View {
                         // 1. Avatar Header
                         avatarHeader
                         
-                        // 2. Subscription card
+                        // 2. Subscription Card (TechConnect PRO)
                         premiumSubscriptionCard
                         
                         // 3. Demo control button if pro
@@ -51,23 +51,26 @@ struct ProfileView: View {
                             demotePlanButton
                         }
                         
-                        // 4. Form inputs card
+                        // 4. App Settings (Theme & Language) Card
+                        settingsCard
+                        
+                        // 5. Form inputs card
                         profileInformationCard
                         
-                        // 5. Tech tags card
+                        // 6. Tech tags card
                         techStackCard
                         
-                        // 6. Save button
+                        // 7. Save button
                         saveProfileButton
                     }
                 }
             }
-            .navigationTitle("Profilim")
+            .navigationTitle(Localization.string("profile", lang: dataService.appLanguage))
             .navigationBarTitleDisplayMode(.inline)
-            .alert("Başarılı", isPresented: $showSaveAlert) {
-                Button("Tamam", role: .cancel) { }
+            .alert(Localization.string("success_title", lang: dataService.appLanguage), isPresented: $showSaveAlert) {
+                Button("OK", role: .cancel) { }
             } message: {
-                Text("Profil bilgileriniz başarıyla güncellendi.")
+                Text(Localization.string("profile_saved_desc", lang: dataService.appLanguage))
             }
             .onAppear {
                 // Initialize states with current user data
@@ -110,7 +113,7 @@ struct ProfileView: View {
             )
             
             VStack(spacing: 4) {
-                Text(displayName.isEmpty ? "Geliştirici" : displayName)
+                Text(displayName.isEmpty ? "Developer" : displayName)
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 
@@ -138,7 +141,7 @@ struct ProfileView: View {
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
-                    Text(dataService.currentUser.subscriptionTier == .pro ? "Premium Üyeliğiniz Aktif!" : "Sınırsız eşleşme ve pro filtreler")
+                    Text(dataService.currentUser.subscriptionTier == .pro ? Localization.string("pro_desc_active", lang: dataService.appLanguage) : Localization.string("pro_desc_inactive", lang: dataService.appLanguage))
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.85))
                 }
@@ -147,7 +150,7 @@ struct ProfileView: View {
                 if dataService.currentUser.subscriptionTier == .pro {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.seal.fill")
-                        Text("Aktif")
+                        Text(Localization.string("active", lang: dataService.appLanguage))
                     }
                     .font(.system(size: 12, weight: .bold))
                     .padding(.horizontal, 12)
@@ -161,7 +164,7 @@ struct ProfileView: View {
                             dataService.currentUser.subscriptionTier = .pro
                         }
                     }) {
-                        Text("Yükselt")
+                        Text(Localization.string("upgrade", lang: dataService.appLanguage))
                             .font(.system(size: 12, weight: .bold))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
@@ -203,7 +206,7 @@ struct ProfileView: View {
                 dataService.currentUser.subscriptionTier = .free
             }
         }) {
-            Text("Aboneliği İptal Et (Demo)")
+            Text(Localization.string("cancel_sub", lang: dataService.appLanguage))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(.red.opacity(0.8))
         }
@@ -211,18 +214,63 @@ struct ProfileView: View {
     }
     
     @ViewBuilder
-    private var profileInformationCard: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Profil Bilgileri")
+    private var settingsCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text(dataService.appLanguage == .turkish ? "Uygulama Ayarları" : "App Settings")
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
             
-            // Name
+            // Theme Segmented Control
             VStack(alignment: .leading, spacing: 6) {
-                Text("Görünen İsim")
+                Text(Localization.string("theme", lang: dataService.appLanguage))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
-                TextField("İsim", text: $displayName)
+                
+                Picker("Tema", selection: $dataService.appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(dataService.appLanguage == .turkish ? theme.displayName : theme.displayNameEN).tag(theme)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            
+            // Language Segmented Control
+            VStack(alignment: .leading, spacing: 6) {
+                Text(Localization.string("language", lang: dataService.appLanguage))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Picker("Dil", selection: $dataService.appLanguage) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+        }
+        .padding(20)
+        .background(cardBackgroundColor)
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(borderColor, lineWidth: 1.5)
+        )
+        .padding(.horizontal, 20)
+    }
+    
+    @ViewBuilder
+    private var profileInformationCard: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(Localization.string("profile_info", lang: dataService.appLanguage))
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+            
+            // Display Name input
+            VStack(alignment: .leading, spacing: 6) {
+                Text(Localization.string("display_name", lang: dataService.appLanguage))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.secondary)
+                TextField(Localization.string("display_name", lang: dataService.appLanguage), text: $displayName)
                     .font(.system(size: 15))
                     .padding()
                     .background(inputBackgroundColor)
@@ -234,12 +282,12 @@ struct ProfileView: View {
                     )
             }
             
-            // Role
+            // Role input
             VStack(alignment: .leading, spacing: 6) {
-                Text("Rol / Ünvan")
+                Text(Localization.string("role", lang: dataService.appLanguage))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
-                TextField("Örn: Frontend Developer", text: $role)
+                TextField(Localization.string("role", lang: dataService.appLanguage), text: $role)
                     .font(.system(size: 15))
                     .padding()
                     .background(inputBackgroundColor)
@@ -251,10 +299,10 @@ struct ProfileView: View {
                     )
             }
             
-            // Sector & Exp
+            // Sector & Experience Stepper
             HStack(spacing: 15) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Sektör")
+                    Text(Localization.string("sector", lang: dataService.appLanguage))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.secondary)
                     
@@ -277,7 +325,7 @@ struct ProfileView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Deneyim (\(experienceYears) Yıl)")
+                    Text("\(Localization.string("experience", lang: dataService.appLanguage)) (\(experienceYears) \(Localization.string("stepper_label", lang: dataService.appLanguage)))")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.secondary)
                     
@@ -294,13 +342,13 @@ struct ProfileView: View {
                 }
             }
             
-            // Looking For
+            // Looking For Picker
             VStack(alignment: .leading, spacing: 6) {
-                Text("Ne Arıyorsun?")
+                Text(Localization.string("what_looking_for", lang: dataService.appLanguage))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
                 
-                Picker("Hedef", selection: $lookingFor) {
+                Picker("Looking For", selection: $lookingFor) {
                     ForEach(LookingFor.allCases, id: \.self) { item in
                         Text(item.rawValue).tag(item)
                     }
@@ -318,9 +366,9 @@ struct ProfileView: View {
                 )
             }
             
-            // Bio
+            // Bio text editor
             VStack(alignment: .leading, spacing: 6) {
-                Text("Hakkımda (Maks 300 Karakter)")
+                Text(Localization.string("bio", lang: dataService.appLanguage))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
                 
@@ -351,12 +399,13 @@ struct ProfileView: View {
     @ViewBuilder
     private var techStackCard: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Teknoloji Yığınım")
+            Text(Localization.string("tech_stack", lang: dataService.appLanguage))
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
             
+            // Input to add technology
             HStack {
-                TextField("Teknoloji ekle (Örn: Golang)", text: $newTechText)
+                TextField(Localization.string("add_tech", lang: dataService.appLanguage), text: $newTechText)
                     .font(.system(size: 15))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
@@ -384,6 +433,7 @@ struct ProfileView: View {
                 }
             }
             
+            // Grid of technology tags
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 90))], spacing: 10) {
                 ForEach(dataService.currentUser.techStack, id: \.self) { tech in
                     HStack(spacing: 6) {
@@ -438,7 +488,7 @@ struct ProfileView: View {
             
             showSaveAlert = true
         }) {
-            Text("Profili Kaydet")
+            Text(Localization.string("save_profile", lang: dataService.appLanguage))
                 .fontWeight(.bold)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
