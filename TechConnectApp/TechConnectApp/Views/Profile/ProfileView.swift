@@ -360,7 +360,7 @@ struct ProfileView: View {
                 
                 Picker("Looking For", selection: $lookingFor) {
                     ForEach(LookingFor.allCases, id: \.self) { item in
-                        Text(item.rawValue).tag(item)
+                        Text(item.displayName(lang: dataService.appLanguage)).tag(item)
                     }
                 }
                 .pickerStyle(.menu)

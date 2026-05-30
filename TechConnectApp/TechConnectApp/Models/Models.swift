@@ -2,24 +2,24 @@ import Foundation
 import SwiftUI
 
 enum Sector: String, Codable, CaseIterable {
-    case startup = "Startup"
-    case corporate = "Kurumsal"
-    case freelance = "Freelance"
+    case startup = "STARTUP"
+    case corporate = "CORPORATE"
+    case freelance = "FREELANCE"
     
     func displayName(lang: AppLanguage) -> String {
         switch self {
         case .startup: return "Startup"
         case .corporate: return lang == .turkish ? "Kurumsal" : "Corporate"
-        case .freelance: return lang == .turkish ? "Freelance" : "Freelance"
+        case .freelance: return "Freelance"
         }
     }
 }
 
 enum LookingFor: String, Codable, CaseIterable {
-    case mentor = "Mentör"
-    case mentee = "Mentee"
-    case collaboration = "Proje Ortaklığı"
-    case coffeeChat = "Kahve Sohbeti"
+    case mentor = "MENTOR"
+    case mentee = "MENTEE"
+    case collaboration = "COLLABORATION"
+    case coffeeChat = "COFFEE_CHAT"
     
     func displayName(lang: AppLanguage) -> String {
         switch self {
@@ -134,9 +134,9 @@ struct CoffeeChatRequest: Identifiable, Codable, Hashable {
     var status: RequestStatus
     
     enum RequestStatus: String, Codable {
-        case pending = "Beklemede"
-        case accepted = "Kabul Edildi"
-        case declined = "Reddedildi"
+        case pending = "PENDING"
+        case accepted = "ACCEPTED"
+        case declined = "DECLINED"
     }
 }
 
