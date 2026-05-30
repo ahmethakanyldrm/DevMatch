@@ -21,6 +21,10 @@ enum LookingFor: String, Codable, CaseIterable {
         }
     }
 }
+enum SubscriptionTier: String, Codable {
+    case free = "free"
+    case pro = "pro"
+}
 
 struct DeveloperProfile: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
@@ -34,7 +38,38 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
     var city: String
     var isRemote: Bool
     var techStack: [String]
-    var photoNames: [String] // System SF symbol names or local mock assets
+    var photoNames: [String]
+    var subscriptionTier: SubscriptionTier = .free
+    
+    init(
+        id: UUID = UUID(),
+        displayName: String,
+        email: String,
+        role: String,
+        experienceYears: Int,
+        sector: Sector,
+        bio: String,
+        lookingFor: LookingFor,
+        city: String,
+        isRemote: Bool,
+        techStack: [String],
+        photoNames: [String],
+        subscriptionTier: SubscriptionTier = .free
+    ) {
+        self.id = id
+        self.displayName = displayName
+        self.email = email
+        self.role = role
+        self.experienceYears = experienceYears
+        self.sector = sector
+        self.bio = bio
+        self.lookingFor = lookingFor
+        self.city = city
+        self.isRemote = isRemote
+        self.techStack = techStack
+        self.photoNames = photoNames
+        self.subscriptionTier = subscriptionTier
+    }
 }
 
 struct Message: Identifiable, Codable, Hashable {
