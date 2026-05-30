@@ -12,6 +12,8 @@ class MockDataService: ObservableObject {
     @Published var appTheme: AppTheme = .system
     @Published var appLanguage: AppLanguage = AppLanguage.defaultLanguage()
     
+    @Published var isRealAPIMode: Bool = false
+    
     init() {
         // Initialize current user (mock backend developer)
         self.currentUser = DeveloperProfile(
@@ -30,25 +32,87 @@ class MockDataService: ObservableObject {
         
         setupMockProfiles()
         setupMockMatchesAndMessages()
+        
+        // Auto load real backend data if token is active
+        if APIService.shared.isLoggedIn {
+            Task {
+                await fetchAllData()
+            }
+        }
+    }
+    
+    func fetchAllData() async {
+        do {
+            let profile = try await APIService.shared.getMyProfile()
+            let deck = try await APIService.shared.getDiscoverDeck()
+            let matchesList = try await APIService.shared.getMatches()
+            
+            await MainActor.run {
+                self.currentUser = profile
+                self.profiles = deck
+                self.matches = matchesList
+                self.isRealAPIMode = true
+            }
+            
+            for match in matchesList {
+                if let msgs = try? await APIService.shared.getMessages(matchId: match.id) {
+                    await MainActor.run {
+                        self.messagesByMatch[match.id] = msgs
+                    }
+                }
+            }
+        } catch {
+            print("Error loading data from API: \(error.localizedDescription)")
+            await MainActor.run {
+                self.isRealAPIMode = false
+            }
+        }
+    }
+    
+    func fetchDiscoverDeck() async {
+        guard isRealAPIMode else { return }
+        do {
+            let deck = try await APIService.shared.getDiscoverDeck()
+            await MainActor.run {
+                self.profiles = deck
+            }
+        } catch {
+            print("Error fetching discover deck: \(error.localizedDescription)")
+        }
+    }
+    
+    func fetchMatches() async {
+        guard isRealAPIMode else { return }
+        do {
+            let matchesList = try await APIService.shared.getMatches()
+            await MainActor.run {
+                self.matches = matchesList
+            }
+            for match in matchesList {
+                if let msgs = try? await APIService.shared.getMessages(matchId: match.id) {
+                    await MainActor.run {
+                        self.messagesByMatch[match.id] = msgs
+                    }
+                }
+            }
+        } catch {
+            print("Error fetching matches: \(error.localizedDescription)")
+        }
     }
     
     func calculateCompatibilityScore(target: DeveloperProfile) -> Int {
         var score = 0
-        // 1. Shared technologies (3 points each)
         let sharedTech = Set(currentUser.techStack).intersection(Set(target.techStack))
         score += sharedTech.count * 3
         
-        // 2. Same sector (2 points)
         if currentUser.sector == target.sector {
             score += 2
         }
         
-        // 3. Looking for compatibility (4 points)
         if currentUser.lookingFor == target.lookingFor.compatibilityPartner {
             score += 4
         }
         
-        // 4. Experience years difference <= 3 (1 point)
         if abs(currentUser.experienceYears - target.experienceYears) <= 3 {
             score += 1
         }
@@ -176,28 +240,108 @@ class MockDataService: ObservableObject {
     }
     
     func sendMessage(matchId: UUID, content: String) {
-        let newMessage = Message(senderId: currentUser.id, content: content, sentAt: Date(), isRead: false)
-        if var list = messagesByMatch[matchId] {
-            list.append(newMessage)
-            messagesByMatch[matchId] = list
+        if isRealAPIMode {
+            Task {
+                do {
+                    let msg = try await APIService.shared.sendMessage(matchId: matchId, content: content)
+                    await MainActor.run {
+                        if var list = messagesByMatch[matchId] {
+                            list.append(msg)
+                            messagesByMatch[matchId] = list
+                        } else {
+                            messagesByMatch[matchId] = [msg]
+                        }
+                        if let index = matches.firstIndex(where: { $0.id == matchId }) {
+                            matches[index].lastMessage = content
+                        }
+                    }
+                } catch {
+                    print("Failed to send real message: \(error.localizedDescription)")
+                }
+            }
         } else {
-            messagesByMatch[matchId] = [newMessage]
+            let newMessage = Message(senderId: currentUser.id, content: content, sentAt: Date(), isRead: false)
+            if var list = messagesByMatch[matchId] {
+                list.append(newMessage)
+                messagesByMatch[matchId] = list
+            } else {
+                messagesByMatch[matchId] = [newMessage]
+            }
+            if let index = matches.firstIndex(where: { $0.id == matchId }) {
+                matches[index].lastMessage = content
+            }
         }
-        
-        // Update last message in matches list
-        if let index = matches.firstIndex(where: { $0.id == matchId }) {
-            matches[index].lastMessage = content
+    }
+    
+    func swipe(profile: DeveloperProfile, isLike: Bool) async -> Bool {
+        if isRealAPIMode {
+            do {
+                let res = try await APIService.shared.swipe(targetId: profile.id, isLike: isLike)
+                if res.matched {
+                    await fetchMatches()
+                    return true
+                }
+            } catch {
+                print("Error recording real swipe: \(error.localizedDescription)")
+            }
+            return false
+        } else {
+            return isLike && Double.random(in: 0...1) > 0.4
         }
     }
     
     func requestCoffeeChat(matchId: UUID, proposedTime: Date) {
-        let req = CoffeeChatRequest(
-            id: UUID(),
-            matchId: matchId,
-            requesterId: currentUser.id,
-            proposedTime: proposedTime,
-            status: .pending
+        if isRealAPIMode {
+            Task {
+                do {
+                    let _ = try await APIService.shared.proposeCoffeeChat(matchId: matchId, proposedTime: proposedTime)
+                    // Optionally update coffee chat list
+                } catch {
+                    print("Failed to propose real coffee chat: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            let req = CoffeeChatRequest(
+                id: UUID(),
+                matchId: matchId,
+                requesterId: currentUser.id,
+                proposedTime: proposedTime,
+                status: .pending
+            )
+            coffeeChatRequests.append(req)
+        }
+    }
+    
+    func saveProfile(profile: DeveloperProfile) async throws {
+        if isRealAPIMode {
+            let updated = try await APIService.shared.updateMyProfile(profile: profile)
+            await MainActor.run {
+                self.currentUser = updated
+            }
+        } else {
+            await MainActor.run {
+                self.currentUser = profile
+            }
+        }
+    }
+    
+    func logout() {
+        APIService.shared.clearToken()
+        isRealAPIMode = false
+        self.currentUser = DeveloperProfile(
+            displayName: "Ahmet Hakan Yıldırım",
+            email: "ahmet@techconnect.com",
+            role: "iOS Geliştirici",
+            experienceYears: 4,
+            sector: .startup,
+            bio: "SwiftUI, Combine ve Java Spring Boot ile full-stack mobil uygulamalar geliştiriyorum. Yeni insanlarla tanışmak ve projeler üzerine kahve eşliğinde sohbet etmek harika olur!",
+            lookingFor: .collaboration,
+            city: "İstanbul",
+            isRemote: true,
+            techStack: ["Swift", "SwiftUI", "Java", "Spring Boot", "PostgreSQL", "Git"],
+            photoNames: ["person.fill"]
         )
-        coffeeChatRequests.append(req)
+        setupMockProfiles()
+        setupMockMatchesAndMessages()
     }
 }

@@ -2,23 +2,35 @@ package com.techconnect.backend.config;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import java.security.Key;
+
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
 @Component
 public class JwtUtils {
 
-    @Value("${JWT_SECRET:your_super_secret_jwt_key_at_least_256_bits_long}")
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+
+    @Value("${JWT_SECRET:your_super_secret_jwt_key_at_least_256_bits_long_x9k2m7p}")
     private String jwtSecret;
 
     // Token valid for 30 days
     private final long jwtExpirationMs = 30L * 24L * 60L * 60L * 1000L;
 
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = jwtSecret.getBytes();
+        // Ensure key is at least 256 bits (32 bytes) for HS256/HS384
+        if (keyBytes.length < 32) {
+            byte[] padded = new byte[32];
+            System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
+            keyBytes = padded;
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(UUID userId) {
@@ -32,10 +44,10 @@ public class JwtUtils {
 
     public UUID getUserIdFromToken(String token) {
         String subject = Jwts.parser()
-                .setSigningKey(getSigningKey())
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
+                .parseSignedClaims(token)
+                .getPayload()
                 .getSubject();
         return UUID.fromString(subject);
     }
@@ -43,12 +55,12 @@ public class JwtUtils {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                .setSigningKey(getSigningKey())
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token);
+                .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            // Log or ignore validation failures
+            logger.error("JWT validation failed: {}", e.getMessage());
         }
         return false;
     }

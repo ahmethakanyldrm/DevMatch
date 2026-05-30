@@ -25,6 +25,7 @@ public class DeveloperProfileDto {
     private List<String> techStack;
     private List<String> photoNames;
     private SubscriptionTier subscriptionTier;
+    private String githubUsername;
 
     public static DeveloperProfileDto fromEntity(DeveloperProfile entity) {
         if (entity == null) return null;
@@ -42,6 +43,7 @@ public class DeveloperProfileDto {
                 .techStack(entity.getTechStackList())
                 .photoNames(entity.getPhotoNamesList())
                 .subscriptionTier(entity.getSubscriptionTier())
+                .githubUsername(entity.getGithubUsername())
                 .build();
     }
 }

@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            // Log or ignore authentication failure
+            logger.error("JWT authentication failed: ", e);
         }
 
         filterChain.doFilter(request, response);
@@ -44,8 +44,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
-        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
+        if (headerAuth != null) {
+            headerAuth = headerAuth.trim();
+            if (headerAuth.regionMatches(true, 0, "Bearer ", 0, 7)) {
+                return headerAuth.substring(7).trim();
+            }
         }
         return null;
     }

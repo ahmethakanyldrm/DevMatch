@@ -56,6 +56,12 @@ public class DeveloperProfile {
     @Column(name = "subscription_tier", nullable = false, length = 20)
     @Builder.Default
     private SubscriptionTier subscriptionTier = SubscriptionTier.FREE;
+    
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
+
+    @Column(name = "github_username", length = 100)
+    private String githubUsername;
 
     // Helper methods to convert techStack to List
     public List<String> getTechStackList() {

@@ -25,41 +25,58 @@ public class SwipeService {
     public SwipeResponse swipe(UUID currentUserId, SwipeRequest request) {
         DeveloperProfile liker = profileRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("Profile not found: " + currentUserId));
-        
-        DeveloperProfile liked = profileRepository.findById(request.getLikedId())
-                .orElseThrow(() -> new RuntimeException("Profile not found: " + request.getLikedId()));
 
-        // Save swipe
-        Swipe swipe = Swipe.builder()
-                .id(UUID.randomUUID())
-                .liker(liker)
-                .liked(liked)
-                .swipeType(request.getSwipeType())
-                .createdAt(LocalDateTime.now())
-                .build();
-        
-        swipeRepository.save(swipe);
+        DeveloperProfile liked = profileRepository.findById(request.getTargetUserId())
+                .orElseThrow(() -> new RuntimeException("Profile not found: " + request.getTargetUserId()));
 
-        // Check if mutual match exists
+        // If this swipe already exists, update it (upsert behaviour)
+        Optional<Swipe> existingSwipe = swipeRepository.findByLikerIdAndLikedId(liker.getId(), liked.getId());
+        Swipe swipe;
+        if (existingSwipe.isPresent()) {
+            swipe = existingSwipe.get();
+            swipe.setSwipeType(request.getSwipeType());
+            swipeRepository.save(swipe);
+        } else {
+            swipe = Swipe.builder()
+                    .id(UUID.randomUUID())
+                    .liker(liker)
+                    .liked(liked)
+                    .swipeType(request.getSwipeType())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            swipeRepository.save(swipe);
+        }
+
+        // Check for mutual match only when the current swipe is LIKE
         if (request.getSwipeType() == SwipeType.LIKE) {
             Optional<Swipe> oppositeSwipe = swipeRepository.findByLikerIdAndLikedId(liked.getId(), liker.getId());
-            
+
             if (oppositeSwipe.isPresent() && oppositeSwipe.get().getSwipeType() == SwipeType.LIKE) {
-                // We have a match!
-                Match match = Match.builder()
-                        .id(UUID.randomUUID())
-                        .profile1(liked) // Profile 1
-                        .profile2(liker) // Profile 2
-                        .matchedAt(LocalDateTime.now())
-                        .build();
-                
-                matchRepository.save(match);
-                
-                // Return response with the match info
-                MatchDto matchDto = MatchDto.fromEntity(match, currentUserId, "You matched! Say hello.");
+                // Check if a match record already exists for this pair
+                boolean matchExists = matchRepository
+                        .findMatchBetween(liker.getId(), liked.getId())
+                        .isPresent();
+
+                if (!matchExists) {
+                    Match match = Match.builder()
+                            .id(UUID.randomUUID())
+                            .profile1(liked)
+                            .profile2(liker)
+                            .matchedAt(LocalDateTime.now())
+                            .build();
+                    matchRepository.save(match);
+
+                    MatchDto matchDto = MatchDto.fromEntity(match, currentUserId, "You matched! Say hello.");
+                    return SwipeResponse.builder()
+                            .matched(true)
+                            .match(matchDto)
+                            .build();
+                }
+
+                // Match already existed — still inform the caller
                 return SwipeResponse.builder()
                         .matched(true)
-                        .match(matchDto)
+                        .match(null)
                         .build();
             }
         }

@@ -28,8 +28,16 @@ struct DiscoverView: View {
                     Spacer()
                     
                     Button(action: {
-                        // Reset deck for mock demonstration
-                        activeProfiles = dataService.profiles.shuffled()
+                        if dataService.isRealAPIMode {
+                            Task {
+                                await dataService.fetchDiscoverDeck()
+                                await MainActor.run {
+                                    activeProfiles = dataService.profiles
+                                }
+                            }
+                        } else {
+                            activeProfiles = dataService.profiles.shuffled()
+                        }
                     }) {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 18, weight: .bold))
@@ -68,7 +76,16 @@ struct DiscoverView: View {
                                 .padding(.horizontal, 40)
                             
                             Button(action: {
-                                activeProfiles = dataService.profiles
+                                if dataService.isRealAPIMode {
+                                    Task {
+                                        await dataService.fetchDiscoverDeck()
+                                        await MainActor.run {
+                                            activeProfiles = dataService.profiles
+                                        }
+                                    }
+                                } else {
+                                    activeProfiles = dataService.profiles
+                                }
                             }) {
                                 Text(Localization.string("refresh_deck", lang: dataService.appLanguage))
                                     .fontWeight(.bold)
@@ -191,8 +208,17 @@ struct DiscoverView: View {
             }
         }
         .onAppear {
-            if activeProfiles.isEmpty {
-                activeProfiles = dataService.profiles.shuffled()
+            if dataService.isRealAPIMode {
+                Task {
+                    await dataService.fetchDiscoverDeck()
+                    await MainActor.run {
+                        activeProfiles = dataService.profiles
+                    }
+                }
+            } else {
+                if activeProfiles.isEmpty {
+                    activeProfiles = dataService.profiles.shuffled()
+                }
             }
         }
     }
@@ -203,21 +229,21 @@ struct DiscoverView: View {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let wasRight = right
             // Remove the profile from deck
             activeProfiles.removeAll(where: { $0.id == profile.id })
             swipeStates.removeValue(forKey: profile.id)
             
-            // Mock matching logic
-            if right && Double.random(in: 0...1) > 0.4 {
-                matchedProfile = profile
-                withAnimation(.spring()) {
-                    showMatchOverlay = true
+            Task {
+                let isMatch = await dataService.swipe(profile: profile, isLike: wasRight)
+                if isMatch {
+                    await MainActor.run {
+                        matchedProfile = profile
+                        withAnimation(.spring()) {
+                            showMatchOverlay = true
+                        }
+                    }
                 }
-                
-                // Add to matches in service
-                let newMatch = Match(id: UUID(), profile: profile, matchedAt: Date(), lastMessage: Localization.string("chat_start_helper", lang: dataService.appLanguage))
-                dataService.matches.insert(newMatch, at: 0)
-                dataService.messagesByMatch[newMatch.id] = []
             }
         }
     }
