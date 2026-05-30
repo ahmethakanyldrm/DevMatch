@@ -122,6 +122,7 @@ struct ChatsListView: View {
 // Chat Row View component
 struct ChatRowView: View {
     var match: Match
+    @StateObject private var dataService = MockDataService.shared
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -156,7 +157,16 @@ struct ChatRowView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                Text(match.lastMessage ?? "")
+                let displayLastMessage: String = {
+                    let messages = dataService.messagesByMatch[match.id] ?? []
+                    if messages.isEmpty {
+                        return Localization.string("chat_start_helper", lang: dataService.appLanguage)
+                    } else {
+                        return messages.last?.content ?? match.lastMessage ?? ""
+                    }
+                }()
+                
+                Text(displayLastMessage)
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
                     .lineLimit(1)

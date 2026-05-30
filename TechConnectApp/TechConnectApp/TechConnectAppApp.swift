@@ -7,18 +7,40 @@
 
 import SwiftUI
 
+enum AppFlowState {
+    case splash
+    case onboarding
+    case login
+    case main
+}
+
 @main
 struct TechConnectAppApp: App {
-    @State private var isLoggedIn = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var flowState: AppFlowState = .splash
     @StateObject private var dataService = MockDataService.shared
     
     var body: some Scene {
         WindowGroup {
             Group {
-                if isLoggedIn {
+                switch flowState {
+                case .splash:
+                    SplashView(flowState: $flowState)
+                case .onboarding:
+                    OnboardingView(flowState: $flowState)
+                case .login:
+                    LoginView(isLoggedIn: Binding(
+                        get: { false },
+                        set: { loggedIn in
+                            if loggedIn {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    flowState = .main
+                                }
+                            }
+                        }
+                    ))
+                case .main:
                     MainTabView()
-                } else {
-                    LoginView(isLoggedIn: $isLoggedIn)
                 }
             }
             .preferredColorScheme(dataService.appTheme.colorScheme)

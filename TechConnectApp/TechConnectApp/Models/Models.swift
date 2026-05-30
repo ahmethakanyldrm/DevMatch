@@ -5,6 +5,14 @@ enum Sector: String, Codable, CaseIterable {
     case startup = "Startup"
     case corporate = "Kurumsal"
     case freelance = "Freelance"
+    
+    func displayName(lang: AppLanguage) -> String {
+        switch self {
+        case .startup: return "Startup"
+        case .corporate: return lang == .turkish ? "Kurumsal" : "Corporate"
+        case .freelance: return lang == .turkish ? "Freelance" : "Freelance"
+        }
+    }
 }
 
 enum LookingFor: String, Codable, CaseIterable {
@@ -12,6 +20,15 @@ enum LookingFor: String, Codable, CaseIterable {
     case mentee = "Mentee"
     case collaboration = "Proje Ortaklığı"
     case coffeeChat = "Kahve Sohbeti"
+    
+    func displayName(lang: AppLanguage) -> String {
+        switch self {
+        case .mentor: return lang == .turkish ? "Mentör" : "Mentor"
+        case .mentee: return lang == .turkish ? "Mentee" : "Mentee"
+        case .collaboration: return lang == .turkish ? "Proje Ortaklığı" : "Collaboration"
+        case .coffeeChat: return lang == .turkish ? "Kahve Sohbeti" : "Coffee Chat"
+        }
+    }
     
     var compatibilityPartner: LookingFor {
         switch self {
@@ -209,11 +226,19 @@ struct Localization {
                 "pro_desc_inactive": "Sınırsız eşleşme ve pro filtreler",
                 "active": "Aktif",
                 "upgrade": "Yükselt",
-                "chat_placeholder": "Mesajınızı yazın...",
                 "chat_start_helper": "Şimdi eşleştiniz! Merhaba deyin.",
                 "save": "Kaydet",
                 "stepper_label": "Yıl",
-                "success_title": "Başarılı"
+                "success_title": "Başarılı",
+                "onboarding_title_1": "Geliştirici Ağı",
+                "onboarding_desc_1": "Yazılımcılar ve tasarımcılar için yeni nesil bağlantı platformu.",
+                "onboarding_title_2": "Akıllı Eşleşme",
+                "onboarding_desc_2": "Teknoloji yığınınıza ve hedeflerinize göre en uyumlu profesyonelleri bulun.",
+                "onboarding_title_3": "Kahve Sohbetleri",
+                "onboarding_desc_3": "Kahve daveti planlayarak tecrübelerinizi paylaşın veya projelere başlayın.",
+                "skip": "Atla",
+                "get_started": "Başla",
+                "next": "İleri"
             ],
             .english: [
                 "discover": "Discover",
@@ -269,7 +294,16 @@ struct Localization {
                 "chat_start_helper": "You matched! Say hello.",
                 "save": "Save",
                 "stepper_label": "Years",
-                "success_title": "Success"
+                "success_title": "Success",
+                "onboarding_title_1": "Developer Network",
+                "onboarding_desc_1": "Next-gen networking platform for developers and designers.",
+                "onboarding_title_2": "Smart Matching",
+                "onboarding_desc_2": "Find the most compatible professionals based on tech stack and goals.",
+                "onboarding_title_3": "Coffee Chats",
+                "onboarding_desc_3": "Plan coffee chats to share experiences or launch side projects.",
+                "skip": "Skip",
+                "get_started": "Get Started",
+                "next": "Next"
             ]
         ]
         return translations[lang]?[key] ?? key

@@ -346,7 +346,7 @@ struct DeveloperCardView: View {
                         Spacer()
                         
                         // Sector Badge
-                        Text(profile.sector.rawValue)
+                        Text(profile.sector.displayName(lang: dataService.appLanguage))
                             .font(.caption)
                             .fontWeight(.semibold)
                             .padding(.horizontal, 10)
@@ -391,7 +391,7 @@ struct DeveloperCardView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "briefcase.fill")
                             .font(.system(size: 12))
-                        Text("\(Localization.string("target", lang: dataService.appLanguage)): \(profile.lookingFor.rawValue)")
+                        Text("\(Localization.string("target", lang: dataService.appLanguage)): \(profile.lookingFor.displayName(lang: dataService.appLanguage))")
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundColor(.white.opacity(0.75))
