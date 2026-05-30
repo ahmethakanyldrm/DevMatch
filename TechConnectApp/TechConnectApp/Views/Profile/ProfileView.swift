@@ -1,4 +1,5 @@
 import SwiftUI
+import RevenueCatUI
 
 struct ProfileView: View {
     @StateObject private var dataService = MockDataService.shared
@@ -10,6 +11,10 @@ struct ProfileView: View {
     @State private var sector: Sector = .startup
     @State private var bio = ""
     @State private var lookingFor: LookingFor = .collaboration
+    
+    // RevenueCat sheets
+    @State private var showPaywall = false
+    @State private var showCustomerCenter = false
     
     // Tech Stack editing states
     @State private var newTechText = ""
@@ -82,6 +87,12 @@ struct ProfileView: View {
                 bio = user.bio
                 lookingFor = user.lookingFor
             }
+            .sheet(isPresented: $showPaywall) {
+                CustomPaywallView()
+            }
+            .sheet(isPresented: $showCustomerCenter) {
+                CustomerCenterView()
+            }
         }
     }
     
@@ -137,7 +148,7 @@ struct ProfileView: View {
                     .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("TechConnect PRO")
+                    Text("DevMatch PRO")
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
@@ -160,9 +171,7 @@ struct ProfileView: View {
                     .cornerRadius(10)
                 } else {
                     Button(action: {
-                        withAnimation(.spring()) {
-                            dataService.currentUser.subscriptionTier = .pro
-                        }
+                        showPaywall = true
                     }) {
                         Text(Localization.string("upgrade", lang: dataService.appLanguage))
                             .font(.system(size: 12, weight: .bold))
@@ -202,15 +211,16 @@ struct ProfileView: View {
     @ViewBuilder
     private var demotePlanButton: some View {
         Button(action: {
-            withAnimation {
-                dataService.currentUser.subscriptionTier = .free
-            }
+            showCustomerCenter = true
         }) {
-            Text(Localization.string("cancel_sub", lang: dataService.appLanguage))
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.red.opacity(0.8))
+            HStack {
+                Image(systemName: "person.crop.circle.badge.exclamationmark")
+                Text(dataService.appLanguage == .turkish ? "Aboneliği Yönet (Customer Center)" : "Manage Subscription")
+            }
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundColor(.yellow.opacity(0.9))
         }
-        .padding(.top, -15)
+        .padding(.top, -10)
     }
     
     @ViewBuilder

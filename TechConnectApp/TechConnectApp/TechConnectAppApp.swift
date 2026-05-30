@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import RevenueCat
 
 enum AppFlowState {
     case splash
@@ -19,6 +20,11 @@ struct TechConnectAppApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var flowState: AppFlowState = .splash
     @StateObject private var dataService = MockDataService.shared
+    
+    init() {
+        Purchases.logLevel = .debug
+        Purchases.configure(withAPIKey: "test_BfgZWEqakSiQiFibWwatwMAgRDn")
+    }
     
     var body: some Scene {
         WindowGroup {

@@ -63,7 +63,7 @@ struct SplashView: View {
                 
                 // App Title
                 VStack(spacing: 8) {
-                    Text("TechConnect")
+                    Text("DevMatch")
                         .font(.system(size: 38, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
@@ -93,11 +93,22 @@ struct SplashView: View {
             
             // Wait and transition
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    if hasCompletedOnboarding {
-                        flowState = .login
-                    } else {
-                        flowState = .onboarding
+                if APIService.shared.isLoggedIn {
+                    Task {
+                        await MockDataService.shared.fetchAllData()
+                        await MainActor.run {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                flowState = .main
+                            }
+                        }
+                    }
+                } else {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        if hasCompletedOnboarding {
+                            flowState = .login
+                        } else {
+                            flowState = .onboarding
+                        }
                     }
                 }
             }
