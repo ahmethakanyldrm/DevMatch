@@ -8,15 +8,6 @@
   <strong>Geliştiriciler, Tasarımcılar ve Ürün Yöneticileri için Yeni Nesil Profesyonel Eşleşme ve Network Platformu</strong>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Swift-5.9-orange?logo=swift&logoColor=white" alt="Swift"/>
-  <img src="https://img.shields.io/badge/SwiftUI-iOS%2016%2B-blue?logo=swift&logoColor=white" alt="SwiftUI"/>
-  <img src="https://img.shields.io/badge/Java-21-red?logo=openjdk&logoColor=white" alt="Java 21"/>
-  <img src="https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen?logo=springboot&logoColor=white" alt="Spring Boot 3"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License"/>
-</p>
-
 ---
 
 ## 🌟 Proje Hakkında
