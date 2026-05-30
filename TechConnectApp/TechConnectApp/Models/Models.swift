@@ -59,6 +59,10 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
     var photoNames: [String]
     var subscriptionTier: SubscriptionTier = .free
     
+    enum CodingKeys: String, CodingKey {
+        case id, displayName, email, role, experienceYears, sector, bio, lookingFor, city, isRemote, techStack, photoNames, subscriptionTier
+    }
+    
     init(
         id: UUID = UUID(),
         displayName: String,
@@ -87,6 +91,23 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
         self.techStack = techStack
         self.photoNames = photoNames
         self.subscriptionTier = subscriptionTier
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        self.displayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? ""
+        self.email = try container.decodeIfPresent(String.self, forKey: .email) ?? ""
+        self.role = try container.decodeIfPresent(String.self, forKey: .role) ?? ""
+        self.experienceYears = try container.decodeIfPresent(Int.self, forKey: .experienceYears) ?? 0
+        self.sector = try container.decodeIfPresent(Sector.self, forKey: .sector) ?? .startup
+        self.bio = try container.decodeIfPresent(String.self, forKey: .bio) ?? ""
+        self.lookingFor = try container.decodeIfPresent(LookingFor.self, forKey: .lookingFor) ?? .coffeeChat
+        self.city = try container.decodeIfPresent(String.self, forKey: .city) ?? ""
+        self.isRemote = try container.decodeIfPresent(Bool.self, forKey: .isRemote) ?? false
+        self.techStack = try container.decodeIfPresent([String].self, forKey: .techStack) ?? []
+        self.photoNames = try container.decodeIfPresent([String].self, forKey: .photoNames) ?? []
+        self.subscriptionTier = try container.decodeIfPresent(SubscriptionTier.self, forKey: .subscriptionTier) ?? .free
     }
 }
 

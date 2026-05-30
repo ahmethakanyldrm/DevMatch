@@ -13,3 +13,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+revenuecat:
+  webhook:
+    secret: ${REVENUECAT_WEBHOOK_SECRET:test_webhook_secret}

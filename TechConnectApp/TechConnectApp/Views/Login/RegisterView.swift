@@ -392,9 +392,10 @@ struct RegisterView: View {
             
             Task {
                 do {
-                    _ = try await APIService.shared.register(req: req)
+                    let response = try await APIService.shared.register(req: req)
                     await dataService.fetchAllData()
                     await MainActor.run {
+                        SubscriptionManager.shared.identifyUser(userId: response.profile.id)
                         isLoading = false
                         withAnimation {
                             isLoggedIn = true

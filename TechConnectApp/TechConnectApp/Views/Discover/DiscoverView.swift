@@ -28,15 +28,11 @@ struct DiscoverView: View {
                     Spacer()
                     
                     Button(action: {
-                        if dataService.isRealAPIMode {
-                            Task {
-                                await dataService.fetchDiscoverDeck()
-                                await MainActor.run {
-                                    activeProfiles = dataService.profiles
-                                }
+                        Task {
+                            await dataService.fetchDiscoverDeck()
+                            await MainActor.run {
+                                activeProfiles = dataService.profiles
                             }
-                        } else {
-                            activeProfiles = dataService.profiles.shuffled()
                         }
                     }) {
                         Image(systemName: "arrow.clockwise")
@@ -76,15 +72,11 @@ struct DiscoverView: View {
                                 .padding(.horizontal, 40)
                             
                             Button(action: {
-                                if dataService.isRealAPIMode {
-                                    Task {
-                                        await dataService.fetchDiscoverDeck()
-                                        await MainActor.run {
-                                            activeProfiles = dataService.profiles
-                                        }
+                                Task {
+                                    await dataService.fetchDiscoverDeck()
+                                    await MainActor.run {
+                                        activeProfiles = dataService.profiles
                                     }
-                                } else {
-                                    activeProfiles = dataService.profiles
                                 }
                             }) {
                                 Text(Localization.string("refresh_deck", lang: dataService.appLanguage))
@@ -208,16 +200,10 @@ struct DiscoverView: View {
             }
         }
         .onAppear {
-            if dataService.isRealAPIMode {
-                Task {
-                    await dataService.fetchDiscoverDeck()
-                    await MainActor.run {
-                        activeProfiles = dataService.profiles
-                    }
-                }
-            } else {
-                if activeProfiles.isEmpty {
-                    activeProfiles = dataService.profiles.shuffled()
+            Task {
+                await dataService.fetchDiscoverDeck()
+                await MainActor.run {
+                    activeProfiles = dataService.profiles
                 }
             }
         }

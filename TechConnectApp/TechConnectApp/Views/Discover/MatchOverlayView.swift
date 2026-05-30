@@ -92,7 +92,7 @@ struct MatchOverlayView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                     
-                    Text("\(profile.role) at TechConnect")
+                    Text("\(profile.role) at DevMatch")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }

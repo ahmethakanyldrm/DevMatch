@@ -26,6 +26,7 @@ public class DeveloperProfileDto {
     private List<String> photoNames;
     private SubscriptionTier subscriptionTier;
     private String githubUsername;
+    private Integer compatibilityScore;
 
     public static DeveloperProfileDto fromEntity(DeveloperProfile entity) {
         if (entity == null) return null;

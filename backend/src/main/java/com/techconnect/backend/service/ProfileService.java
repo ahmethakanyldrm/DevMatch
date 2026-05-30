@@ -93,7 +93,7 @@ public class ProfileService {
             DeveloperProfile ahmet = DeveloperProfile.builder()
                     .id(UUID.fromString("99999999-9999-9999-9999-999999999999"))
                     .displayName("Ahmet Hakan")
-                    .email("ahmet@techconnect.com")
+                    .email("ahmet@devmatch.com")
                     .role("iOS Geliştirici")
                     .experienceYears(4)
                     .sector(Sector.STARTUP)
@@ -159,7 +159,7 @@ public class ProfileService {
                     .id(UUID.randomUUID())
                     .match(match2)
                     .senderId(ahmet.getId())
-                    .content("Selam Elif, tasarımlarını inceledim, TechConnect projesi için bir UI/UX desteği arıyorum.")
+                    .content("Selam Elif, tasarımlarını inceledim, DevMatch projesi için bir UI/UX desteği arıyorum.")
                     .sentAt(LocalDateTime.now().minusMinutes(50))
                     .isRead(true)
                     .build();
@@ -204,8 +204,61 @@ public class ProfileService {
     }
 
     public List<DeveloperProfileDto> getDiscoverableProfiles(UUID userId) {
-        return profileRepository.findDiscoverableProfiles(userId).stream()
-                .map(DeveloperProfileDto::fromEntity)
+        DeveloperProfile currentUser = profileRepository.findById(userId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "User profile not found: " + userId));
+
+        List<DeveloperProfile> candidates = profileRepository.findDiscoverableProfiles(userId);
+
+        return candidates.stream()
+                .map(candidate -> {
+                    DeveloperProfileDto dto = DeveloperProfileDto.fromEntity(candidate);
+                    int score = calculateCompatibilityScore(currentUser, candidate);
+                    dto.setCompatibilityScore(score);
+                    return dto;
+                })
+                .sorted(Comparator.comparingInt(DeveloperProfileDto::getCompatibilityScore).reversed())
+                .limit(20)
                 .collect(Collectors.toList());
+    }
+
+    private int calculateCompatibilityScore(DeveloperProfile current, DeveloperProfile target) {
+        int score = 0;
+
+        // 1. Shared technologies count * 3
+        List<String> currentTechs = current.getTechStackList();
+        List<String> targetTechs = target.getTechStackList();
+        if (currentTechs != null && targetTechs != null && !currentTechs.isEmpty() && !targetTechs.isEmpty()) {
+            Set<String> sharedTechs = new HashSet<>(currentTechs);
+            sharedTechs.retainAll(targetTechs);
+            score += sharedTechs.size() * 3;
+        }
+
+        // 2. Same sector ? 2 : 0
+        if (current.getSector() != null && current.getSector() == target.getSector()) {
+            score += 2;
+        }
+
+        // 3. looking_for compatibility ? 4 : 0
+        if (current.getLookingFor() != null && target.getLookingFor() != null) {
+            if (isLookingForCompatible(current.getLookingFor(), target.getLookingFor())) {
+                score += 4;
+            }
+        }
+
+        // 4. experience_years_diff <= 3 ? 1 : 0
+        if (current.getExperienceYears() != null && target.getExperienceYears() != null) {
+            if (Math.abs(current.getExperienceYears() - target.getExperienceYears()) <= 3) {
+                score += 1;
+            }
+        }
+
+        return score;
+    }
+
+    private boolean isLookingForCompatible(LookingFor a, LookingFor b) {
+        if (a == LookingFor.MENTOR) return b == LookingFor.MENTEE;
+        if (a == LookingFor.MENTEE) return b == LookingFor.MENTOR;
+        return a == b;
     }
 }

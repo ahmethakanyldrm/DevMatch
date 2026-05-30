@@ -63,7 +63,7 @@ struct SplashView: View {
                 
                 // App Title
                 VStack(spacing: 8) {
-                    Text("TechConnect")
+                    Text("DevMatch")
                         .font(.system(size: 38, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
