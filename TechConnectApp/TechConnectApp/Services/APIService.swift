@@ -154,6 +154,61 @@ class APIService: ObservableObject {
         return try await makeRequest(path: "/api/v1/profiles/me", method: "PUT", body: bodyData)
     }
     
+    func uploadPhoto(image: Data) async throws -> DeveloperProfile {
+        guard let url = URL(string: "\(baseURL)/api/v1/profiles/me/photo") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        if let jwt = token {
+            request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        } else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(image)
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+            clearToken()
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorMsg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorMsg["error"] as? String {
+                throw NSError(domain: "APIService", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: error])
+            }
+            throw URLError(.badServerResponse)
+        }
+        
+        if let rawString = String(data: data, encoding: .utf8) {
+            print("[APIService DEBUG] Raw response for upload photo:")
+            print(rawString)
+        }
+        
+        let decoder = JSONDecoder()
+        return try decoder.decode(DeveloperProfile.self, from: data)
+    }
+    
     func getDiscoverDeck() async throws -> [DeveloperProfile] {
         try await makeRequest(path: "/api/v1/profiles/discover", method: "GET")
     }

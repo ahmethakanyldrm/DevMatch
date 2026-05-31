@@ -160,6 +160,13 @@ class MockDataService: ObservableObject {
         }
     }
     
+    func uploadPhoto(image: Data) async throws {
+        let updated = try await APIService.shared.uploadPhoto(image: image)
+        await MainActor.run {
+            self.currentUser = updated
+        }
+    }
+    
     func logout() {
         APIService.shared.clearToken()
         SubscriptionManager.shared.resetUser()

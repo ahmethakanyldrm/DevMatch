@@ -242,9 +242,13 @@ struct DeveloperCardView: View {
     var translation: CGFloat
     var onSwipeLeft: () -> Void
     var onSwipeRight: () -> Void
-    
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var dataService = MockDataService.shared
+    
+    private var isSystemSymbol: Bool {
+        guard let name = profile.photoNames.first else { return true }
+        return !name.contains(".") && !name.contains("/")
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -268,11 +272,20 @@ struct DeveloperCardView: View {
                 // Avatar symbol in card background
                 VStack {
                     Spacer()
-                    Image(systemName: profile.photoNames.first ?? "person.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 140, height: 140)
-                        .foregroundColor(colorScheme == .dark ? .white.opacity(0.12) : .black.opacity(0.08))
+                    if isSystemSymbol {
+                        Image(systemName: profile.photoNames.first ?? "person.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 140, height: 140)
+                            .foregroundColor(colorScheme == .dark ? .white.opacity(0.12) : .black.opacity(0.08))
+                    } else {
+                        ProfileImageView(photoName: profile.photoNames.first, size: 160)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.25), lineWidth: 4)
+                            )
+                            .shadow(color: .black.opacity(0.3), radius: 10, y: 5)
+                    }
                     Spacer()
                 }
                 

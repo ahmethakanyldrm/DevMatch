@@ -7,8 +7,16 @@ import com.techconnect.backend.repository.MessageRepository;
 import com.techconnect.backend.repository.ProfileRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -260,5 +268,43 @@ public class ProfileService {
         if (a == LookingFor.MENTOR) return b == LookingFor.MENTEE;
         if (a == LookingFor.MENTEE) return b == LookingFor.MENTOR;
         return a == b;
+    }
+
+    @Transactional
+    public DeveloperProfileDto uploadPhoto(UUID userId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dosya boş veya geçersiz.");
+        }
+        
+        DeveloperProfile profile = profileRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı profili bulunamadı: " + userId));
+        
+        try {
+            // Create uploads directory if it does not exist
+            File uploadDir = new File("uploads");
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+            
+            // Generate a unique filename
+            String originalFilename = file.getOriginalFilename();
+            String extension = "jpg"; // default fallback
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
+            }
+            String newFilename = UUID.randomUUID().toString() + "." + extension;
+            
+            // Save file
+            Path destination = Paths.get("uploads").resolve(newFilename).toAbsolutePath();
+            Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Update profile with the new photo name
+            profile.setPhotoNamesList(Collections.singletonList(newFilename));
+            profileRepository.save(profile);
+            
+            return DeveloperProfileDto.fromEntity(profile);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fotoğraf yüklenirken hata oluştu: " + e.getMessage(), e);
+        }
     }
 }

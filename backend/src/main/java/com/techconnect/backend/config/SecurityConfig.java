@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/webhooks/**").permitAll()
                 .requestMatchers("/ws/**").permitAll() // Allow WebSocket connections
+                .requestMatchers("/uploads/**").permitAll() // Allow loading uploaded photos
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

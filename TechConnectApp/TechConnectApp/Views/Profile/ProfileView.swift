@@ -1,5 +1,6 @@
 import SwiftUI
 import RevenueCatUI
+import PhotosUI
 
 struct ProfileView: View {
     @StateObject private var dataService = MockDataService.shared
@@ -11,6 +12,9 @@ struct ProfileView: View {
     @State private var sector: Sector = .startup
     @State private var bio = ""
     @State private var lookingFor: LookingFor = .collaboration
+    
+    // Photo selection state
+    @State private var selectedItem: PhotosPickerItem? = nil
     
     // RevenueCat sheets
     @State private var showPaywall = false
@@ -93,6 +97,17 @@ struct ProfileView: View {
             .sheet(isPresented: $showCustomerCenter) {
                 CustomerCenterView()
             }
+            .onChange(of: selectedItem) { newItem in
+                Task {
+                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                        do {
+                            try await dataService.uploadPhoto(image: data)
+                        } catch {
+                            print("Error uploading photo: \(error)")
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -101,27 +116,21 @@ struct ProfileView: View {
     @ViewBuilder
     private var avatarHeader: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.purple, .blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+            PhotosPicker(selection: $selectedItem, matching: .images) {
+                ZStack(alignment: .bottomTrailing) {
+                    ProfileImageView(photoName: dataService.currentUser.photoNames.first, size: 100)
+                        .overlay(
+                            Circle()
+                                .stroke(borderColor, lineWidth: 2)
                         )
-                    )
-                    .frame(width: 100, height: 100)
-                
-                Image(systemName: "person.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 44, height: 44)
-                    .foregroundColor(.white)
+                    
+                    Image(systemName: "camera.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.purple)
+                        .background(Circle().fill(Color.white))
+                        .offset(x: 2, y: 2)
+                }
             }
-            .overlay(
-                Circle()
-                    .stroke(borderColor, lineWidth: 2)
-            )
             
             VStack(spacing: 4) {
                 Text(displayName.isEmpty ? "Developer" : displayName)
@@ -489,14 +498,24 @@ struct ProfileView: View {
     @ViewBuilder
     private var saveProfileButton: some View {
         Button(action: {
-            dataService.currentUser.displayName = displayName
-            dataService.currentUser.role = role
-            dataService.currentUser.experienceYears = experienceYears
-            dataService.currentUser.sector = sector
-            dataService.currentUser.bio = bio
-            dataService.currentUser.lookingFor = lookingFor
+            var updatedUser = dataService.currentUser
+            updatedUser.displayName = displayName
+            updatedUser.role = role
+            updatedUser.experienceYears = experienceYears
+            updatedUser.sector = sector
+            updatedUser.bio = bio
+            updatedUser.lookingFor = lookingFor
             
-            showSaveAlert = true
+            Task {
+                do {
+                    try await dataService.saveProfile(profile: updatedUser)
+                    await MainActor.run {
+                        showSaveAlert = true
+                    }
+                } catch {
+                    print("Failed to save profile: \(error)")
+                }
+            }
         }) {
             Text(Localization.string("save_profile", lang: dataService.appLanguage))
                 .fontWeight(.bold)
