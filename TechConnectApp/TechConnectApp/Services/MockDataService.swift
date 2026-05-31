@@ -160,6 +160,13 @@ class MockDataService: ObservableObject {
         }
     }
     
+    func uploadPhoto(image: Data) async throws {
+        let updated = try await APIService.shared.uploadPhoto(image: image)
+        await MainActor.run {
+            self.currentUser = updated
+        }
+    }
+    
     func logout() {
         APIService.shared.clearToken()
         SubscriptionManager.shared.resetUser()
@@ -180,5 +187,12 @@ class MockDataService: ObservableObject {
         self.matches = []
         self.messagesByMatch = [:]
         self.coffeeChatRequests = []
+    }
+    
+    func deleteAccount() async throws {
+        try await APIService.shared.deleteAccount()
+        await MainActor.run {
+            self.logout()
+        }
     }
 }

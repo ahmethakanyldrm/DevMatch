@@ -227,7 +227,7 @@ struct RegisterView: View {
                     
                     Picker("", selection: $sector) {
                         ForEach(Sector.allCases, id: \.self) { item in
-                            Text(item.rawValue).tag(item)
+                            Text(item.displayName(lang: dataService.appLanguage)).tag(item)
                         }
                     }
                     .pickerStyle(.menu)
@@ -340,7 +340,7 @@ struct RegisterView: View {
                 
                 Picker("", selection: $lookingFor) {
                     ForEach(LookingFor.allCases, id: \.self) { item in
-                        Text(item.rawValue).tag(item)
+                        Text(item.displayName(lang: dataService.appLanguage)).tag(item)
                     }
                 }
                 .pickerStyle(.segmented)

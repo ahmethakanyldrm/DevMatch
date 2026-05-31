@@ -43,18 +43,8 @@ struct MatchOverlayView: View {
                 // Matching circles representation
                 HStack(spacing: -30) {
                     // Current User Circle
-                    ZStack {
-                        Circle()
-                            .fill(Color.purple.opacity(0.2))
-                            .frame(width: 120, height: 120)
-                        
-                        Image(systemName: "person.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60, height: 60)
-                            .foregroundColor(.white)
-                    }
-                    .overlay(Circle().stroke(Color.purple, lineWidth: 3))
+                    ProfileImageView(photoName: dataService.currentUser.photoNames.first, size: 120)
+                        .overlay(Circle().stroke(Color.purple, lineWidth: 3))
                     
                     // Connection Heart Link
                     ZStack {
@@ -70,18 +60,8 @@ struct MatchOverlayView: View {
                     .zIndex(1)
                     
                     // Matched User Circle
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.2))
-                            .frame(width: 120, height: 120)
-                        
-                        Image(systemName: profile.photoNames.first ?? "person.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60, height: 60)
-                            .foregroundColor(.white)
-                    }
-                    .overlay(Circle().stroke(Color.blue, lineWidth: 3))
+                    ProfileImageView(photoName: profile.photoNames.first, size: 120)
+                        .overlay(Circle().stroke(Color.blue, lineWidth: 3))
                 }
                 .scaleEffect(animateScale ? 1.0 : 0.6)
                 

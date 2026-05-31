@@ -33,27 +33,11 @@ struct ChatsListView: View {
                                 ForEach(dataService.matches) { match in
                                     NavigationLink(value: match) {
                                         VStack(spacing: 8) {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(
-                                                        LinearGradient(
-                                                            colors: [.purple, .blue],
-                                                            startPoint: .topLeading,
-                                                            endPoint: .bottomTrailing
-                                                        )
-                                                    )
-                                                    .frame(width: 70, height: 70)
-                                                
-                                                Image(systemName: match.profile.photoNames.first ?? "person.fill")
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .frame(width: 36, height: 36)
-                                                    .foregroundColor(.white)
-                                            }
-                                            .overlay(
-                                                Circle()
-                                                    .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08), lineWidth: 1.5)
-                                            )
+                                            ProfileImageView(photoName: match.profile.photoNames.first, size: 70)
+                                                .overlay(
+                                                    Circle()
+                                                        .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08), lineWidth: 1.5)
+                                                )
                                             
                                             Text(match.profile.displayName.components(separatedBy: " ").first ?? "")
                                                 .font(.caption)
@@ -128,21 +112,11 @@ struct ChatRowView: View {
     var body: some View {
         HStack(spacing: 15) {
             // Profile photo
-            ZStack {
-                Circle()
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
-                    .frame(width: 58, height: 58)
-                
-                Image(systemName: match.profile.photoNames.first ?? "person.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 28, height: 28)
-                    .foregroundColor(colorScheme == .dark ? .white : .primary)
-            }
-            .overlay(
-                Circle()
-                    .stroke(Color.purple.opacity(0.3), lineWidth: 1.5)
-            )
+            ProfileImageView(photoName: match.profile.photoNames.first, size: 58, useGrayBackgroundForSystem: true)
+                .overlay(
+                    Circle()
+                        .stroke(Color.purple.opacity(0.3), lineWidth: 1.5)
+                )
             
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
