@@ -40,8 +40,8 @@ enum LookingFor: String, Codable, CaseIterable {
     }
 }
 enum SubscriptionTier: String, Codable {
-    case free = "free"
-    case pro = "pro"
+    case free = "FREE"
+    case pro = "PRO"
 }
 
 struct DeveloperProfile: Identifiable, Codable, Hashable {
@@ -58,9 +58,11 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
     var techStack: [String]
     var photoNames: [String]
     var subscriptionTier: SubscriptionTier = .free
+    var githubUsername: String?
+    var compatibilityScore: Int?
     
     enum CodingKeys: String, CodingKey {
-        case id, displayName, email, role, experienceYears, sector, bio, lookingFor, city, isRemote, techStack, photoNames, subscriptionTier
+        case id, displayName, email, role, experienceYears, sector, bio, lookingFor, city, isRemote, techStack, photoNames, subscriptionTier, githubUsername, compatibilityScore
     }
     
     init(
@@ -76,7 +78,9 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
         isRemote: Bool,
         techStack: [String],
         photoNames: [String],
-        subscriptionTier: SubscriptionTier = .free
+        subscriptionTier: SubscriptionTier = .free,
+        githubUsername: String? = nil,
+        compatibilityScore: Int? = nil
     ) {
         self.id = id
         self.displayName = displayName
@@ -91,6 +95,8 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
         self.techStack = techStack
         self.photoNames = photoNames
         self.subscriptionTier = subscriptionTier
+        self.githubUsername = githubUsername
+        self.compatibilityScore = compatibilityScore
     }
     
     init(from decoder: Decoder) throws {
@@ -102,12 +108,14 @@ struct DeveloperProfile: Identifiable, Codable, Hashable {
         self.experienceYears = try container.decodeIfPresent(Int.self, forKey: .experienceYears) ?? 0
         self.sector = try container.decodeIfPresent(Sector.self, forKey: .sector) ?? .startup
         self.bio = try container.decodeIfPresent(String.self, forKey: .bio) ?? ""
-        self.lookingFor = try container.decodeIfPresent(LookingFor.self, forKey: .lookingFor) ?? .coffeeChat
+        self.lookingFor = try container.decodeIfPresent(LookingFor.self, forKey: .lookingFor) ?? .collaboration
         self.city = try container.decodeIfPresent(String.self, forKey: .city) ?? ""
         self.isRemote = try container.decodeIfPresent(Bool.self, forKey: .isRemote) ?? false
         self.techStack = try container.decodeIfPresent([String].self, forKey: .techStack) ?? []
         self.photoNames = try container.decodeIfPresent([String].self, forKey: .photoNames) ?? []
         self.subscriptionTier = try container.decodeIfPresent(SubscriptionTier.self, forKey: .subscriptionTier) ?? .free
+        self.githubUsername = try container.decodeIfPresent(String.self, forKey: .githubUsername)
+        self.compatibilityScore = try container.decodeIfPresent(Int.self, forKey: .compatibilityScore)
     }
 }
 

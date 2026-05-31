@@ -75,36 +75,40 @@ class APIService: ObservableObject {
             throw URLError(.badServerResponse)
         }
         
+        // DEBUG: Print raw JSON response
+        if let rawString = String(data: data, encoding: .utf8) {
+            print("[APIService DEBUG] Raw response for \(path):")
+            print(rawString)
+        }
+        
         let decoder = JSONDecoder()
-        // Use ISO8601 or custom date decoding strategy
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
         decoder.dateDecodingStrategy = .custom { decoder -> Date in
             let container = try decoder.singleValueContainer()
             let dateStr = try container.decode(String.self)
             
-            // Try standard format with milliseconds
             if let date = dateFormatter.date(from: dateStr) {
                 return date
             }
-            
-            // Try ISO8601
             let isoDecoder = ISO8601DateFormatter()
             isoDecoder.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             if let date = isoDecoder.date(from: dateStr) {
                 return date
             }
-            
-            // Try fallback ISO8601 without fractional seconds
             let fallbackFormatter = ISO8601DateFormatter()
             if let date = fallbackFormatter.date(from: dateStr) {
                 return date
             }
-            
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateStr)")
         }
         
-        return try decoder.decode(T.self, from: data)
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            print("[APIService ERROR] Decode error for \(path): \(error)")
+            throw error
+        }
     }
     
     // Auth Endpoints
