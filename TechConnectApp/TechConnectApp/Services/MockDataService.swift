@@ -11,6 +11,7 @@ class MockDataService: ObservableObject {
     @Published var coffeeChatRequests: [CoffeeChatRequest] = []
     @Published var appTheme: AppTheme = .system
     @Published var appLanguage: AppLanguage = AppLanguage.defaultLanguage()
+    @Published var showLikeLimitPaywall = false
     
     init() {
         // Initialize current user with placeholder details
@@ -139,6 +140,12 @@ class MockDataService: ObservableObject {
             }
         } catch {
             print("Error recording real swipe: \(error.localizedDescription)")
+            let nsError = error as NSError
+            if nsError.code == 402 || nsError.localizedDescription.contains("like_limit_exceeded") {
+                await MainActor.run {
+                    self.showLikeLimitPaywall = true
+                }
+            }
         }
         return false
     }

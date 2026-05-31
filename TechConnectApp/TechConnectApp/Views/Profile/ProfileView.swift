@@ -12,6 +12,8 @@ struct ProfileView: View {
     @State private var sector: Sector = .startup
     @State private var bio = ""
     @State private var lookingFor: LookingFor = .collaboration
+    @State private var gender: Gender = .male
+    @State private var preferredGender: PreferredGender = .everyone
     
     // Photo selection state
     @State private var selectedItem: PhotosPickerItem? = nil
@@ -70,10 +72,7 @@ struct ProfileView: View {
                         // 4. App Settings (Theme & Language) Card
                         settingsCard
                         
-                        // 5. Legal & Account settings
-                        legalAndAccountCard
-                        
-                        // 6. Form inputs card
+                        // 5. Form inputs card
                         profileInformationCard
                         
                         // 6. Tech tags card
@@ -81,6 +80,9 @@ struct ProfileView: View {
                         
                         // 7. Save button
                         saveProfileButton
+                        
+                        // 8. Legal & Account settings
+                        legalAndAccountCard
                     }
                 }
             }
@@ -100,6 +102,8 @@ struct ProfileView: View {
                 sector = user.sector
                 bio = user.bio
                 lookingFor = user.lookingFor
+                gender = user.gender
+                preferredGender = user.preferredGender
             }
             .sheet(isPresented: $showPaywall) {
                 CustomPaywallView()
@@ -131,11 +135,11 @@ struct ProfileView: View {
                 contactSheetView
             }
             .alert(
-                dataService.appLanguage == .turkish ? "Hesabımı Sil" : "Delete Account",
+                Localization.string("delete_account_title", lang: dataService.appLanguage),
                 isPresented: $showDeleteAccountAlert
             ) {
-                Button(dataService.appLanguage == .turkish ? "Vazgeç" : "Cancel", role: .cancel) { }
-                Button(dataService.appLanguage == .turkish ? "Evet, Sil" : "Yes, Delete", role: .destructive) {
+                Button(Localization.string("cancel_action", lang: dataService.appLanguage), role: .cancel) { }
+                Button(Localization.string("delete_confirm_action", lang: dataService.appLanguage), role: .destructive) {
                     Task {
                         do {
                             try await dataService.deleteAccount()
@@ -145,9 +149,7 @@ struct ProfileView: View {
                     }
                 }
             } message: {
-                Text(dataService.appLanguage == .turkish ? 
-                     "Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm eşleşmeleriniz ile mesajlarınız silinecektir." : 
-                     "Are you sure you want to delete your account? This action is permanent and will delete all matches and chats.")
+                Text(Localization.string("delete_account_message", lang: dataService.appLanguage))
             }
         }
     }
@@ -227,34 +229,20 @@ struct ProfileView: View {
                             .font(.system(size: 12, weight: .bold))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.yellow, Color.orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .background(Color.yellow)
                             .foregroundColor(.black)
                             .cornerRadius(10)
-                            .shadow(color: .yellow.opacity(0.3), radius: 5)
                     }
                 }
             }
         }
         .padding(18)
-        .background(
-            LinearGradient(
-                colors: [Color(red: 0.15, green: 0.1, blue: 0.28), Color(red: 0.26, green: 0.16, blue: 0.48)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .background(Color(red: 0.12, green: 0.13, blue: 0.18))
         .cornerRadius(18)
         .overlay(
             RoundedRectangle(cornerRadius: 18)
-                .stroke(Color.yellow.opacity(0.35), lineWidth: 1.5)
+                .stroke(Color.purple.opacity(0.35), lineWidth: 1.5)
         )
-        .shadow(color: .purple.opacity(0.2), radius: 10, y: 5)
         .padding(.horizontal, 20)
     }
     
@@ -265,7 +253,7 @@ struct ProfileView: View {
         }) {
             HStack {
                 Image(systemName: "person.crop.circle.badge.exclamationmark")
-                Text(dataService.appLanguage == .turkish ? "Aboneliği Yönet (Customer Center)" : "Manage Subscription")
+                Text(Localization.string("manage_subscription", lang: dataService.appLanguage))
             }
             .font(.system(size: 13, weight: .semibold))
             .foregroundColor(.yellow.opacity(0.9))
@@ -276,7 +264,7 @@ struct ProfileView: View {
     @ViewBuilder
     private var settingsCard: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text(dataService.appLanguage == .turkish ? "Uygulama Ayarları" : "App Settings")
+            Text(Localization.string("app_settings", lang: dataService.appLanguage))
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
             
@@ -288,13 +276,13 @@ struct ProfileView: View {
                 
                 Picker("Tema", selection: $dataService.appTheme) {
                     ForEach(AppTheme.allCases) { theme in
-                        Text(dataService.appLanguage == .turkish ? theme.displayName : theme.displayNameEN).tag(theme)
+                        Text(theme.displayName(lang: dataService.appLanguage)).tag(theme)
                     }
                 }
                 .pickerStyle(.segmented)
             }
             
-            // Language Segmented Control
+            // Language Menu Control
             VStack(alignment: .leading, spacing: 6) {
                 Text(Localization.string("language", lang: dataService.appLanguage))
                     .font(.system(size: 12, weight: .semibold))
@@ -305,7 +293,7 @@ struct ProfileView: View {
                         Text(lang.displayName).tag(lang)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
             }
         }
         .padding(20)
@@ -445,6 +433,72 @@ struct ProfileView: View {
                             .stroke(borderColor, lineWidth: 1)
                     )
             }
+            
+            // Gender Selector
+            VStack(alignment: .leading, spacing: 6) {
+                Text(Localization.string("gender", lang: dataService.appLanguage))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Picker("Gender", selection: $gender) {
+                    ForEach(Gender.allCases, id: \.self) { item in
+                        Text(item.displayName(lang: dataService.appLanguage)).tag(item)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            
+            // Preferred Gender Selector (Pro locked)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(Localization.string("preferred_gender", lang: dataService.appLanguage))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    
+                    if dataService.currentUser.subscriptionTier != .pro {
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Image(systemName: "crown.fill")
+                            Text("PRO")
+                        }
+                        .font(.system(size: 10, weight: .bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.yellow.opacity(0.2))
+                        .foregroundColor(.yellow)
+                        .cornerRadius(6)
+                    }
+                }
+                
+                if dataService.currentUser.subscriptionTier == .pro {
+                    Picker("Preferred Gender", selection: $preferredGender) {
+                        ForEach(PreferredGender.allCases, id: \.self) { item in
+                            Text(item.displayName(lang: dataService.appLanguage)).tag(item)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } else {
+                    Button(action: {
+                        showPaywall = true
+                    }) {
+                        HStack {
+                            Text(preferredGender.displayName(lang: dataService.appLanguage))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Image(systemName: "lock.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(inputBackgroundColor)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(borderColor, lineWidth: 1)
+                        )
+                    }
+                }
+            }
+            }
         }
         .padding(20)
         .background(cardBackgroundColor)
@@ -546,6 +600,8 @@ struct ProfileView: View {
             updatedUser.sector = sector
             updatedUser.bio = bio
             updatedUser.lookingFor = lookingFor
+            updatedUser.gender = gender
+            updatedUser.preferredGender = preferredGender
             
             Task {
                 do {
@@ -563,15 +619,8 @@ struct ProfileView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: [.purple, .blue],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
+                .background(Color.indigo)
                 .cornerRadius(15)
-                .shadow(color: .purple.opacity(0.4), radius: 10, y: 5)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 30)
@@ -580,7 +629,7 @@ struct ProfileView: View {
     @ViewBuilder
     private var legalAndAccountCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(dataService.appLanguage == .turkish ? "Bilgi & Hesap" : "Info & Account")
+            Text(Localization.string("info_account_section", lang: dataService.appLanguage))
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
                 .padding(.bottom, 4)
@@ -590,7 +639,7 @@ struct ProfileView: View {
                 HStack {
                     Image(systemName: "info.circle.fill")
                         .foregroundColor(.purple)
-                    Text(dataService.appLanguage == .turkish ? "Uygulama Hakkında" : "About App")
+                    Text(Localization.string("about_app", lang: dataService.appLanguage))
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -606,7 +655,7 @@ struct ProfileView: View {
                 HStack {
                     Image(systemName: "doc.text.fill")
                         .foregroundColor(.purple)
-                    Text(dataService.appLanguage == .turkish ? "Kullanım Koşulları" : "Terms of Use")
+                    Text(Localization.string("terms_of_use", lang: dataService.appLanguage))
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -622,7 +671,7 @@ struct ProfileView: View {
                 HStack {
                     Image(systemName: "lock.shield.fill")
                         .foregroundColor(.purple)
-                    Text(dataService.appLanguage == .turkish ? "Gizlilik Politikası" : "Privacy Policy")
+                    Text(Localization.string("privacy_policy", lang: dataService.appLanguage))
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -638,7 +687,7 @@ struct ProfileView: View {
                 HStack {
                     Image(systemName: "envelope.fill")
                         .foregroundColor(.purple)
-                    Text(dataService.appLanguage == .turkish ? "Bize Ulaşın" : "Contact Us")
+                    Text(Localization.string("contact_us", lang: dataService.appLanguage))
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -656,7 +705,7 @@ struct ProfileView: View {
                 HStack {
                     Image(systemName: "arrow.right.circle.fill")
                         .foregroundColor(.orange)
-                    Text(dataService.appLanguage == .turkish ? "Çıkış Yap" : "Log Out")
+                    Text(Localization.string("log_out", lang: dataService.appLanguage))
                         .foregroundColor(.orange)
                         .fontWeight(.semibold)
                     Spacer()
@@ -670,7 +719,7 @@ struct ProfileView: View {
                 HStack {
                     Image(systemName: "trash.fill")
                         .foregroundColor(.red)
-                    Text(dataService.appLanguage == .turkish ? "Hesabımı Sil" : "Delete Account")
+                    Text(Localization.string("delete_account_title", lang: dataService.appLanguage))
                         .foregroundColor(.red)
                         .fontWeight(.semibold)
                     Spacer()
@@ -690,36 +739,33 @@ struct ProfileView: View {
     @ViewBuilder
     private var aboutSheetView: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    Image(systemName: "bolt.heart.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.purple)
-                        .padding(.top, 40)
-                    
-                    Text("DevMatch")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("v1.0.0")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    Text(dataService.appLanguage == .turkish ? 
-                         "DevMatch, yazılımcı ve teknoloji profesyonellerinin ortak projeler geliştirmek, kahve sohbetleri yapmak veya mentörlük ilişkileri kurmak için birbirleriyle eşleşmesini sağlayan premium bir networking platformudur." :
-                         "DevMatch is a premium networking platform that allows developers and tech professionals to match for side projects, coffee chats, or mentor-mentee collaborations.")
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                    
-                    Spacer()
-                }
+            VStack(spacing: 20) {
+                Spacer().frame(height: 20)
+                
+                Image(systemName: "app.gift.fill")
+                    .font(.system(size: 80))
+                    .foregroundColor(.purple)
+                
+                Text("DevMatch")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("v1.0.0")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(Localization.string("about_app_desc", lang: dataService.appLanguage))
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                
+                Spacer()
             }
-            .navigationTitle(dataService.appLanguage == .turkish ? "Hakkında" : "About")
+            .navigationTitle(Localization.string("about_app", lang: dataService.appLanguage))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showAboutSheet = false }
+                    Button(Localization.string("close_action", lang: dataService.appLanguage)) { showAboutSheet = false }
                 }
             }
         }
@@ -730,31 +776,25 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(dataService.appLanguage == .turkish ? "1. Kabul Edilebilir Kullanım" : "1. Acceptable Use")
+                    Text(Localization.string("terms_use_1_title", lang: dataService.appLanguage))
                         .font(.headline)
-                    Text(dataService.appLanguage == .turkish ? 
-                         "DevMatch yalnızca bilişim, yazılım ve teknoloji çalışanları için tasarlanmıştır. Platformumuzda sahte profil oluşturmak veya diğer kullanıcıları rahatsız etmek yasaktır." :
-                         "DevMatch is exclusively designed for IT, software, and tech professionals. Creating fake profiles or harassing other users is strictly prohibited.")
+                    Text(Localization.string("terms_use_1_desc", lang: dataService.appLanguage))
                     
-                    Text(dataService.appLanguage == .turkish ? "2. Hesap Sorumluluğu" : "2. Account Responsibility")
+                    Text(Localization.string("terms_use_2_title", lang: dataService.appLanguage))
                         .font(.headline)
-                    Text(dataService.appLanguage == .turkish ? 
-                         "Kullanıcılar hesaplarının güvenliğinden ve yaptıkları paylaşımlardan kendileri sorumludur. GitHub hesabınız doğrulanmış olmalıdır." :
-                         "Users are responsible for their account security and activities. A verified GitHub account is required.")
+                    Text(Localization.string("terms_use_2_desc", lang: dataService.appLanguage))
                     
-                    Text(dataService.appLanguage == .turkish ? "3. Abonelik Koşulları" : "3. Subscription Terms")
+                    Text(Localization.string("terms_use_3_title", lang: dataService.appLanguage))
                         .font(.headline)
-                    Text(dataService.appLanguage == .turkish ? 
-                         "DevMatch PRO abonelikleri Apple App Store veya entegre faturalandırma sistemi aracılığıyla yönetilir. Satın alımlar iptal edilene kadar otomatik yenilenir." :
-                         "DevMatch PRO subscriptions are billed through Apple App Store or integrated processing. Auto-renews until cancelled.")
+                    Text(Localization.string("terms_use_3_desc", lang: dataService.appLanguage))
                 }
                 .padding(24)
             }
-            .navigationTitle(dataService.appLanguage == .turkish ? "Kullanım Koşulları" : "Terms of Use")
+            .navigationTitle(Localization.string("terms_of_use", lang: dataService.appLanguage))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showTermsSheet = false }
+                    Button(Localization.string("close_action", lang: dataService.appLanguage)) { showTermsSheet = false }
                 }
             }
         }
@@ -765,31 +805,25 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(dataService.appLanguage == .turkish ? "1. Toplanan Veriler" : "1. Collected Data")
+                    Text(Localization.string("privacy_1_title", lang: dataService.appLanguage))
                         .font(.headline)
-                    Text(dataService.appLanguage == .turkish ? 
-                         "Uygulamaya kayıt olurken verdiğiniz e-posta, ad soyad, rol, deneyim yılı, şehir ve yüklediğiniz profil resimleri güvenli bir şekilde PostgreSQL veritabanımızda saklanır." :
-                         "Your email, display name, role, experience, city, bio, and profile photos are securely stored in our PostgreSQL database.")
+                    Text(Localization.string("privacy_1_desc", lang: dataService.appLanguage))
                     
-                    Text(dataService.appLanguage == .turkish ? "2. GitHub Entegrasyonu" : "2. GitHub Integration")
+                    Text(Localization.string("privacy_2_title", lang: dataService.appLanguage))
                         .font(.headline)
-                    Text(dataService.appLanguage == .turkish ? 
-                         "Verifikasyon amacıyla GitHub kullanıcı adınız sorgulanır. Şifreniz veya özel hesap bilgileriniz asla talep edilmez ve saklanmaz." :
-                         "Your GitHub username is queried for verification. We never request or store your GitHub credentials.")
+                    Text(Localization.string("privacy_2_desc", lang: dataService.appLanguage))
                     
-                    Text(dataService.appLanguage == .turkish ? "3. Veri Güvenliği" : "3. Data Security")
+                    Text(Localization.string("privacy_3_title", lang: dataService.appLanguage))
                         .font(.headline)
-                    Text(dataService.appLanguage == .turkish ? 
-                         "Şifreniz BCrypt algoritması ile hash'lenerek saklanır. Verileriniz üçüncü şahıslarla asla paylaşılmaz." :
-                         "Passwords are cryptographically hashed using BCrypt. Your personal data is never shared with third parties.")
+                    Text(Localization.string("privacy_3_desc", lang: dataService.appLanguage))
                 }
                 .padding(24)
             }
-            .navigationTitle(dataService.appLanguage == .turkish ? "Gizlilik Politikası" : "Privacy Policy")
+            .navigationTitle(Localization.string("privacy_policy", lang: dataService.appLanguage))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showPrivacyPolicySheet = false }
+                    Button(Localization.string("close_action", lang: dataService.appLanguage)) { showPrivacyPolicySheet = false }
                 }
             }
         }
@@ -804,13 +838,11 @@ struct ProfileView: View {
                     .foregroundColor(.purple)
                     .padding(.top, 30)
                 
-                Text(dataService.appLanguage == .turkish ? "Bize Ulaşın" : "Contact Us")
+                Text(Localization.string("contact_us", lang: dataService.appLanguage))
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text(dataService.appLanguage == .turkish ? 
-                     "Sorularınız, iş birliği talepleriniz veya destek ihtiyaçlarınız için bize e-posta yoluyla ulaşabilirsiniz." :
-                     "For any support requests, questions, or collaboration offers, feel free to reach out to us.")
+                Text(Localization.string("contact_desc", lang: dataService.appLanguage))
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -846,7 +878,7 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showContactSheet = false }
+                    Button(Localization.string("close_action", lang: dataService.appLanguage)) { showContactSheet = false }
                 }
             }
         }

@@ -19,4 +19,6 @@ public class RegisterRequest {
     private Boolean isRemote;
     private List<String> techStack;
     private List<String> photoNames;
+    private com.techconnect.backend.model.Gender gender;
+    private com.techconnect.backend.model.PreferredGender preferredGender;
 }

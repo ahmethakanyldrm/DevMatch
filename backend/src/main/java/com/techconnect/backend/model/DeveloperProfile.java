@@ -56,6 +56,16 @@ public class DeveloperProfile {
     @Column(name = "subscription_tier", nullable = false, length = 20)
     @Builder.Default
     private SubscriptionTier subscriptionTier = SubscriptionTier.FREE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false, length = 20)
+    @Builder.Default
+    private Gender gender = Gender.MALE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "preferred_gender", nullable = false, length = 20)
+    @Builder.Default
+    private PreferredGender preferredGender = PreferredGender.EVERYONE;
     
     @Column(name = "password_hash", length = 100)
     private String passwordHash;

@@ -199,6 +199,9 @@ struct DiscoverView: View {
                 }
             }
         }
+        .sheet(isPresented: $dataService.showLikeLimitPaywall) {
+            CustomPaywallView()
+        }
         .onAppear {
             Task {
                 await dataService.fetchDiscoverDeck()
@@ -222,7 +225,13 @@ struct DiscoverView: View {
             
             Task {
                 let isMatch = await dataService.swipe(profile: profile, isLike: wasRight)
-                if isMatch {
+                if dataService.showLikeLimitPaywall {
+                    await MainActor.run {
+                        if !activeProfiles.contains(where: { $0.id == profile.id }) {
+                            activeProfiles.insert(profile, at: 0)
+                        }
+                    }
+                } else if isMatch {
                     await MainActor.run {
                         matchedProfile = profile
                         withAnimation(.spring()) {

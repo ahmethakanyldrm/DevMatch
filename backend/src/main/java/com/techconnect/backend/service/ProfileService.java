@@ -48,6 +48,8 @@ public class ProfileService {
                     .techStack("Swift,SwiftUI,Combine,UIKit,Git,CI/CD")
                     .photoNames("person.crop.circle.badge.checkmark")
                     .subscriptionTier(SubscriptionTier.FREE)
+                    .gender(Gender.FEMALE)
+                    .preferredGender(PreferredGender.EVERYONE)
                     .build();
 
             DeveloperProfile elif = DeveloperProfile.builder()
@@ -64,6 +66,8 @@ public class ProfileService {
                     .techStack("Figma,Sketch,HTML,CSS,UI Design")
                     .photoNames("person.crop.circle.fill")
                     .subscriptionTier(SubscriptionTier.FREE)
+                    .gender(Gender.FEMALE)
+                    .preferredGender(PreferredGender.EVERYONE)
                     .build();
 
             DeveloperProfile can = DeveloperProfile.builder()
@@ -80,6 +84,8 @@ public class ProfileService {
                     .techStack("Java,Spring Boot,Go,Docker,Kubernetes,AWS")
                     .photoNames("person.crop.circle.fill")
                     .subscriptionTier(SubscriptionTier.PRO)
+                    .gender(Gender.MALE)
+                    .preferredGender(PreferredGender.FEMALE)
                     .build();
 
             DeveloperProfile selin = DeveloperProfile.builder()
@@ -96,6 +102,8 @@ public class ProfileService {
                     .techStack("Go,Python,PostgreSQL,Redis,Docker")
                     .photoNames("person.crop.circle.fill")
                     .subscriptionTier(SubscriptionTier.FREE)
+                    .gender(Gender.FEMALE)
+                    .preferredGender(PreferredGender.MALE)
                     .build();
 
             DeveloperProfile ahmet = DeveloperProfile.builder()
@@ -112,6 +120,8 @@ public class ProfileService {
                     .techStack("Swift,SwiftUI,Combine,Java,Spring Boot,PostgreSQL,WebSocket")
                     .photoNames("person.crop.circle.badge.checkmark")
                     .subscriptionTier(SubscriptionTier.FREE)
+                    .gender(Gender.MALE)
+                    .preferredGender(PreferredGender.EVERYONE)
                     .build();
 
             profileRepository.saveAll(Arrays.asList(merve, elif, can, selin, ahmet));
@@ -207,6 +217,12 @@ public class ProfileService {
         profile.setTechStackList(dto.getTechStack());
         profile.setPhotoNamesList(dto.getPhotoNames());
         profile.setSubscriptionTier(dto.getSubscriptionTier());
+        if (dto.getGender() != null) {
+            profile.setGender(dto.getGender());
+        }
+        if (dto.getPreferredGender() != null) {
+            profile.setPreferredGender(dto.getPreferredGender());
+        }
 
         return DeveloperProfileDto.fromEntity(profileRepository.save(profile));
     }
@@ -217,6 +233,20 @@ public class ProfileService {
                         org.springframework.http.HttpStatus.NOT_FOUND, "User profile not found: " + userId));
 
         List<DeveloperProfile> candidates = profileRepository.findDiscoverableProfiles(userId);
+
+        // Filter based on subscription tier gender preferences
+        if (currentUser.getSubscriptionTier() == SubscriptionTier.PRO) {
+            PreferredGender pref = currentUser.getPreferredGender();
+            if (pref == PreferredGender.MALE) {
+                candidates = candidates.stream()
+                        .filter(p -> p.getGender() == Gender.MALE)
+                        .collect(Collectors.toList());
+            } else if (pref == PreferredGender.FEMALE) {
+                candidates = candidates.stream()
+                        .filter(p -> p.getGender() == Gender.FEMALE)
+                        .collect(Collectors.toList());
+            }
+        }
 
         return candidates.stream()
                 .map(candidate -> {

@@ -75,6 +75,8 @@ public class AuthService {
                 .techStack(request.getTechStack() != null ? String.join(",", request.getTechStack()) : "")
                 .photoNames(request.getPhotoNames() != null ? String.join(",", request.getPhotoNames()) : "person.crop.circle.fill")
                 .subscriptionTier(SubscriptionTier.FREE)
+                .gender(request.getGender() != null ? request.getGender() : com.techconnect.backend.model.Gender.MALE)
+                .preferredGender(request.getPreferredGender() != null ? request.getPreferredGender() : com.techconnect.backend.model.PreferredGender.EVERYONE)
                 .build();
                 
         profileRepository.save(profile);
