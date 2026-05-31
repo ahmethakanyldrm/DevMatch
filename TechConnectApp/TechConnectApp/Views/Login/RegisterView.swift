@@ -20,6 +20,8 @@ struct RegisterView: View {
     @State private var city = "İstanbul"
     @State private var isRemote = true
     @State private var techStack: [String] = []
+    @State private var gender: Gender = .male
+    @State private var preferredGender: PreferredGender = .everyone
     
     // Tech Stack Input
     @State private var newTechText = ""
@@ -31,29 +33,15 @@ struct RegisterView: View {
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.1),
-                    Color(red: 0.1, green: 0.05, blue: 0.2),
-                    Color(red: 0.02, green: 0.02, blue: 0.05)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            Color(red: 0.08, green: 0.09, blue: 0.12)
+                .ignoresSafeArea()
             
-            // Glowing shapes
+            // Faint subtle background ambient light
             Circle()
-                .fill(Color.purple.opacity(0.25))
+                .fill(Color.purple.opacity(0.04))
                 .frame(width: 300, height: 300)
-                .blur(radius: 80)
-                .offset(x: -120, y: -150)
-            
-            Circle()
-                .fill(Color.blue.opacity(0.2))
-                .frame(width: 250, height: 250)
-                .blur(radius: 80)
-                .offset(x: 120, y: 150)
+                .blur(radius: 100)
+                .offset(x: -80, y: -100)
             
             VStack {
                 // Header
@@ -75,7 +63,7 @@ struct RegisterView: View {
                     
                     Spacer()
                     
-                    Text(dataService.appLanguage == .turkish ? "Kayıt Ol (\(step)/3)" : "Sign Up (\(step)/3)")
+                    Text("\(Localization.string("signup_title", lang: dataService.appLanguage)) (\(step)/3)")
                         .font(.headline)
                         .foregroundColor(.white)
                     
@@ -118,22 +106,15 @@ struct RegisterView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             } else {
-                                Text(step == 3 ? (dataService.appLanguage == .turkish ? "Kaydı Tamamla" : "Complete Register") : (dataService.appLanguage == .turkish ? "İlerle" : "Continue"))
+                                Text(step == 3 ? Localization.string("complete_register", lang: dataService.appLanguage) : Localization.string("continue_btn", lang: dataService.appLanguage))
                                     .fontWeight(.bold)
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [.purple, .blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .background(Color.indigo)
                         .foregroundColor(.white)
                         .cornerRadius(14)
-                        .shadow(color: .purple.opacity(0.4), radius: 8, x: 0, y: 4)
                     }
                     .disabled(isLoading)
                     .padding(.horizontal, 20)
@@ -148,10 +129,10 @@ struct RegisterView: View {
     private var stepOneCredentials: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "Görünen İsim" : "Display Name")
+                Text(Localization.string("display_name", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
-                TextField("", text: $displayName, prompt: Text(dataService.appLanguage == .turkish ? "Örn: Ahmet" : "e.g. Ahmet").foregroundColor(.white.opacity(0.35)))
+                TextField("", text: $displayName, prompt: Text(Localization.string("example_name", lang: dataService.appLanguage)).foregroundColor(.white.opacity(0.35)))
                     .foregroundColor(.white)
                     .padding()
                     .background(Color.white.opacity(0.06))
@@ -159,7 +140,7 @@ struct RegisterView: View {
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "E-posta Adresi" : "Email Address")
+                Text(Localization.string("email_address", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
                 TextField("", text: $email, prompt: Text("example@tech.com").foregroundColor(.white.opacity(0.35)))
@@ -172,7 +153,7 @@ struct RegisterView: View {
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "Şifre" : "Password")
+                Text(Localization.string("password", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
                 SecureField("", text: $password, prompt: Text("••••••••").foregroundColor(.white.opacity(0.35)))
@@ -183,17 +164,17 @@ struct RegisterView: View {
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "GitHub Kullanıcı Adı (IT Doğrulaması)" : "GitHub Username (IT Verification)")
+                Text(Localization.string("github_username_verify", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
-                TextField("", text: $githubUsername, prompt: Text(dataService.appLanguage == .turkish ? "Kullanıcı adınız" : "Your username").foregroundColor(.white.opacity(0.35)))
+                TextField("", text: $githubUsername, prompt: Text(Localization.string("username_placeholder", lang: dataService.appLanguage)).foregroundColor(.white.opacity(0.35)))
                     .foregroundColor(.white)
                     .autocapitalization(.none)
                     .padding()
                     .background(Color.white.opacity(0.06))
                     .cornerRadius(12)
                 
-                Text(dataService.appLanguage == .turkish ? "⚠️ Platformumuz yalnızca bilişim ve teknoloji çalışanlarına açık olduğu için geçerli bir GitHub hesabı gerekmektedir." : "⚠️ Since our platform is only open to tech and IT professionals, a valid GitHub account is required.")
+                Text(Localization.string("github_required_warning", lang: dataService.appLanguage))
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.55))
                     .padding(.top, 4)
@@ -209,10 +190,10 @@ struct RegisterView: View {
     private var stepTwoProfessional: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "Rol / Ünvan" : "Role / Title")
+                Text(Localization.string("role", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
-                TextField("", text: $role, prompt: Text(dataService.appLanguage == .turkish ? "Örn: iOS Geliştirici" : "e.g. iOS Developer").foregroundColor(.white.opacity(0.35)))
+                TextField("", text: $role, prompt: Text(Localization.string("example_role", lang: dataService.appLanguage)).foregroundColor(.white.opacity(0.35)))
                     .foregroundColor(.white)
                     .padding()
                     .background(Color.white.opacity(0.06))
@@ -221,7 +202,7 @@ struct RegisterView: View {
             
             HStack(spacing: 15) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(dataService.appLanguage == .turkish ? "Sektör" : "Sector")
+                    Text(Localization.string("sector", lang: dataService.appLanguage))
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.purple)
                     
@@ -238,7 +219,7 @@ struct RegisterView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("\(dataService.appLanguage == .turkish ? "Deneyim" : "Experience") (\(experienceYears) \(dataService.appLanguage == .turkish ? "Yıl" : "Years"))")
+                    Text("\(Localization.string("experience", lang: dataService.appLanguage)) (\(experienceYears) \(Localization.string("stepper_label", lang: dataService.appLanguage)))")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.purple)
                     
@@ -252,7 +233,7 @@ struct RegisterView: View {
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "Şehir" : "City")
+                Text(Localization.string("city", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
                 TextField("", text: $city, prompt: Text("İstanbul").foregroundColor(.white.opacity(0.35)))
@@ -262,8 +243,21 @@ struct RegisterView: View {
                     .cornerRadius(12)
             }
             
+            VStack(alignment: .leading, spacing: 6) {
+                Text(Localization.string("gender", lang: dataService.appLanguage))
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.purple)
+                
+                Picker("", selection: $gender) {
+                    ForEach(Gender.allCases, id: \.self) { item in
+                        Text(item.displayName(lang: dataService.appLanguage)).tag(item)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            
             Toggle(isOn: $isRemote) {
-                Text(dataService.appLanguage == .turkish ? "Uzaktan Çalışıyorum (Remote)" : "I work Remotely")
+                Text(Localization.string("work_remotely", lang: dataService.appLanguage))
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
             }
@@ -280,12 +274,12 @@ struct RegisterView: View {
     private var stepThreeTechAndSubmit: some View {
         VStack(spacing: 22) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(dataService.appLanguage == .turkish ? "Teknoloji Yığınım" : "My Tech Stack")
+                Text(Localization.string("tech_stack", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
                 
                 HStack {
-                    TextField("", text: $newTechText, prompt: Text(dataService.appLanguage == .turkish ? "Teknoloji ekle (Golang vb)" : "Add technology (e.g. Swift)").foregroundColor(.white.opacity(0.35)))
+                    TextField("", text: $newTechText, prompt: Text(Localization.string("add_tech_placeholder", lang: dataService.appLanguage)).foregroundColor(.white.opacity(0.35)))
                         .foregroundColor(.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
@@ -334,7 +328,7 @@ struct RegisterView: View {
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(dataService.appLanguage == .turkish ? "Eşleşme Hedefiniz" : "Matching Goal")
+                Text(Localization.string("matching_goal", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.purple)
                 
@@ -357,19 +351,19 @@ struct RegisterView: View {
         
         if step == 1 {
             if displayName.isEmpty || email.isEmpty || password.isEmpty || githubUsername.isEmpty {
-                errorMessage = dataService.appLanguage == .turkish ? "Lütfen tüm bilgileri doldurun." : "Please fill in all information."
+                errorMessage = Localization.string("fill_all_info_error", lang: dataService.appLanguage)
                 return
             }
             withAnimation { step = 2 }
         } else if step == 2 {
             if role.isEmpty || city.isEmpty {
-                errorMessage = dataService.appLanguage == .turkish ? "Lütfen rol ve şehir alanlarını doldurun." : "Please fill in role and city fields."
+                errorMessage = Localization.string("fill_role_city_error", lang: dataService.appLanguage)
                 return
             }
             withAnimation { step = 3 }
         } else if step == 3 {
             if techStack.isEmpty {
-                errorMessage = dataService.appLanguage == .turkish ? "Lütfen en az bir teknoloji ekleyin." : "Please add at least one technology."
+                errorMessage = Localization.string("add_at_least_one_tech_error", lang: dataService.appLanguage)
                 return
             }
             
@@ -387,7 +381,9 @@ struct RegisterView: View {
                 city: city,
                 isRemote: isRemote,
                 techStack: techStack,
-                photoNames: ["person.fill"] // default
+                photoNames: ["person.fill"], // default
+                gender: gender,
+                preferredGender: preferredGender
             )
             
             Task {

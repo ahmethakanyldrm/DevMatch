@@ -29,6 +29,16 @@ public class SwipeService {
         DeveloperProfile liked = profileRepository.findById(request.getTargetUserId())
                 .orElseThrow(() -> new RuntimeException("Profile not found: " + request.getTargetUserId()));
 
+        // Limit free users to 10 likes per 24 hours
+        if (request.getSwipeType() == SwipeType.LIKE && liker.getSubscriptionTier() == SubscriptionTier.FREE) {
+            java.time.LocalDateTime oneDayAgo = java.time.LocalDateTime.now().minusDays(1);
+            long recentLikes = swipeRepository.countByLikerIdAndSwipeTypeAndCreatedAtAfter(liker.getId(), SwipeType.LIKE, oneDayAgo);
+            if (recentLikes >= 10) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.PAYMENT_REQUIRED, "like_limit_exceeded");
+            }
+        }
+
         // If this swipe already exists, update it (upsert behaviour)
         Optional<Swipe> existingSwipe = swipeRepository.findByLikerIdAndLikedId(liker.getId(), liked.getId());
         Swipe swipe;

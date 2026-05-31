@@ -12,31 +12,29 @@ struct CustomPaywallView: View {
     @State private var errorMessage = ""
     
     // Fallback info if offerings are not loaded
-    private let fallbackMonthlyPrice = "₺169.99"
-    private let fallbackYearlyPrice = "₺99.99"
-    private let fallbackYearlyTotal = "₺1198.88"
+    private var fallbackMonthlyPrice: String {
+        dataService.appLanguage == .turkish ? "₺169.99" : "€4.99"
+    }
+    private var fallbackYearlyPrice: String {
+        dataService.appLanguage == .turkish ? "₺99.99" : "€2.99"
+    }
+    private var fallbackYearlyTotal: String {
+        dataService.appLanguage == .turkish ? "₺1198.88" : "€35.88"
+    }
     
     var body: some View {
         ZStack {
-            // Dark elegant neon gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.12),
-                    Color(red: 0.12, green: 0.06, blue: 0.22),
-                    Color(red: 0.02, green: 0.02, blue: 0.06)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // Dark elegant background
+            Color(red: 0.08, green: 0.09, blue: 0.12)
+                .ignoresSafeArea()
             
-            // Glowing circles
+            // Faint subtle background ambient light
             VStack {
                 HStack {
                     Circle()
-                        .fill(Color.purple.opacity(0.25))
+                        .fill(Color.purple.opacity(0.04))
                         .frame(width: 250, height: 250)
-                        .blur(radius: 60)
+                        .blur(radius: 80)
                         .offset(x: -80, y: -50)
                     Spacer()
                 }
@@ -79,13 +77,13 @@ struct CustomPaywallView: View {
         }
         .preferredColorScheme(.dark)
         .alert(
-            dataService.appLanguage == .turkish ? "Hata" : "Error",
+            Localization.string("error_title", lang: dataService.appLanguage),
             isPresented: Binding(
                 get: { !errorMessage.isEmpty },
                 set: { if !$0 { errorMessage = "" } }
             )
         ) {
-            Button("Tamam", role: .cancel) {}
+            Button(Localization.string("close_action", lang: dataService.appLanguage), role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
@@ -114,15 +112,8 @@ struct CustomPaywallView: View {
                     .blur(radius: 10)
                 
                 Image(systemName: "crown.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.yellow, .orange, .pink],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .shadow(color: .orange.opacity(0.5), radius: 10)
+                    .font(.system(size: 38))
+                    .foregroundColor(.yellow)
             }
             
             Text("DEVMATCH PRO")
@@ -130,7 +121,7 @@ struct CustomPaywallView: View {
                 .foregroundColor(.white)
                 .tracking(2)
             
-            Text(dataService.appLanguage == .turkish ? "Geliştirici dünyasındaki ayrıcalıklarınızı kilitleyin." : "Unlock your privileges in the tech community.")
+            Text(Localization.string("paywall_unlock_desc", lang: dataService.appLanguage))
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -143,26 +134,26 @@ struct CustomPaywallView: View {
             featureRow(
                 icon: "heart.fill",
                 color: .pink,
-                title: dataService.appLanguage == .turkish ? "Sınırsız Beğeni" : "Unlimited Likes",
-                desc: dataService.appLanguage == .turkish ? "Günde 10 beğeni sınırını kaldırın, dilediğinizce kaydırın." : "Remove the 10 likes limit, swipe as much as you want."
+                title: Localization.string("unlimited_likes", lang: dataService.appLanguage),
+                desc: Localization.string("unlimited_likes_desc", lang: dataService.appLanguage)
             )
             featureRow(
                 icon: "sparkles",
                 color: .blue,
-                title: dataService.appLanguage == .turkish ? "Gelişmiş Filtreler" : "Advanced Filters",
-                desc: dataService.appLanguage == .turkish ? "Teknoloji yığını, şehir ve deneyime göre filtreleyin." : "Filter by technology stack, city, and years of experience."
+                title: Localization.string("advanced_filters", lang: dataService.appLanguage),
+                desc: Localization.string("advanced_filters_desc", lang: dataService.appLanguage)
             )
             featureRow(
                 icon: "arrow.counterclockwise",
                 color: .green,
-                title: dataService.appLanguage == .turkish ? "Geri Al (Rewind)" : "Rewind",
-                desc: dataService.appLanguage == .turkish ? "Sola kaydırdığınız son profilleri anında geri getirin." : "Instantly bring back profiles you accidentally passed."
+                title: Localization.string("rewind_title", lang: dataService.appLanguage),
+                desc: Localization.string("rewind_desc", lang: dataService.appLanguage)
             )
             featureRow(
                 icon: "bolt.fill",
                 color: .yellow,
-                title: dataService.appLanguage == .turkish ? "Profil Öne Çıkarma" : "Profile Boost",
-                desc: dataService.appLanguage == .turkish ? "Keşfet listelerinde üstte görünün, 5 kat daha hızlı eşleşin." : "Get featured at the top of discover decks for 5x faster matches."
+                title: Localization.string("profile_boost", lang: dataService.appLanguage),
+                desc: Localization.string("profile_boost_desc", lang: dataService.appLanguage)
             )
         }
         .padding(18)
@@ -199,7 +190,7 @@ struct CustomPaywallView: View {
     
     private var plansSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(dataService.appLanguage == .turkish ? "Bir Plan Seçin" : "Select a Plan")
+            Text(Localization.string("select_a_plan", lang: dataService.appLanguage))
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.white.opacity(0.6))
                 .padding(.leading, 4)
@@ -208,18 +199,18 @@ struct CustomPaywallView: View {
                 // Monthly Plan Card
                 planCard(
                     index: 0,
-                    title: dataService.appLanguage == .turkish ? "Aylık Plan" : "Monthly Plan",
+                    title: Localization.string("monthly_plan", lang: dataService.appLanguage),
                     price: monthlyPriceString,
-                    subtext: dataService.appLanguage == .turkish ? "Dilediğin zaman iptal et" : "Cancel anytime"
+                    subtext: Localization.string("cancel_anytime", lang: dataService.appLanguage)
                 )
                 
                 // Yearly Plan Card
                 planCard(
                     index: 1,
-                    title: dataService.appLanguage == .turkish ? "Yıllık Plan" : "Yearly Plan",
+                    title: Localization.string("yearly_plan", lang: dataService.appLanguage),
                     price: yearlyPriceString,
-                    subtext: dataService.appLanguage == .turkish ? "\(yearlyTotalString) / yıl (%40 Tasarruf)" : "\(yearlyTotalString) / yr (Save 40%)",
-                    badge: dataService.appLanguage == .turkish ? "POPÜLER" : "POPULAR"
+                    subtext: String(format: Localization.string("yearly_savings_format", lang: dataService.appLanguage), yearlyTotalString),
+                    badge: Localization.string("popular_badge", lang: dataService.appLanguage)
                 )
             }
         }
@@ -277,25 +268,18 @@ struct CustomPaywallView: View {
     private var actionSection: some View {
         VStack(spacing: 14) {
             Button(action: handlePurchase) {
-                Text(dataService.appLanguage == .turkish ? "PRO ÜYELİĞE GEÇ" : "UPGRADE TO PRO")
+                Text(Localization.string("upgrade_to_pro", lang: dataService.appLanguage))
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(
-                        LinearGradient(
-                            colors: [.purple, .blue],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .background(Color.indigo)
                     .cornerRadius(14)
-                    .shadow(color: .purple.opacity(0.4), radius: 8, x: 0, y: 4)
             }
             
             HStack(spacing: 20) {
                 Button(action: handleRestore) {
-                    Text(dataService.appLanguage == .turkish ? "Satın Almaları Geri Yükle" : "Restore Purchases")
+                    Text(Localization.string("restore_purchases", lang: dataService.appLanguage))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.white.opacity(0.5))
                 }
@@ -307,7 +291,7 @@ struct CustomPaywallView: View {
                 Button(action: {
                     // Open Terms of Service Link
                 }) {
-                    Text(dataService.appLanguage == .turkish ? "Kullanım Şartları" : "Terms of Service")
+                    Text(Localization.string("terms_of_service", lang: dataService.appLanguage))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.white.opacity(0.5))
                 }
@@ -327,11 +311,11 @@ struct CustomPaywallView: View {
                     .foregroundColor(.green)
                     .shadow(color: .green.opacity(0.4), radius: 15)
                 
-                Text(dataService.appLanguage == .turkish ? "TEBRİKLER!" : "CONGRATULATIONS!")
+                Text(Localization.string("congratulations", lang: dataService.appLanguage))
                     .font(.system(size: 24, weight: .black, design: .rounded))
                     .foregroundColor(.white)
                 
-                Text(dataService.appLanguage == .turkish ? "DevMatch PRO Ayrıcalıkları Tanımlandı!" : "DevMatch PRO Privileges Unlocked!")
+                Text(Localization.string("pro_privileges_unlocked", lang: dataService.appLanguage))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white.opacity(0.8))
                     .multilineTextAlignment(.center)
@@ -341,7 +325,7 @@ struct CustomPaywallView: View {
                     showSuccessAlert = false
                     dismiss()
                 }) {
-                    Text(dataService.appLanguage == .turkish ? "Kullanmaya Başla" : "Start Using")
+                    Text(Localization.string("start_using", lang: dataService.appLanguage))
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.black)
                         .padding(.horizontal, 30)
@@ -365,7 +349,7 @@ struct CustomPaywallView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .scaleEffect(1.5)
                 
-                Text(dataService.appLanguage == .turkish ? "İşleniyor..." : "Processing...")
+                Text(Localization.string("processing", lang: dataService.appLanguage))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white.opacity(0.8))
             }
@@ -449,7 +433,7 @@ struct CustomPaywallView: View {
                         showSuccessAlert = true
                     }
                 } else {
-                    errorMessage = dataService.appLanguage == .turkish ? "Geri yüklenecek abonelik bulunamadı." : "No subscriptions found to restore."
+                    errorMessage = Localization.string("no_subscriptions_found", lang: dataService.appLanguage)
                 }
             }
         }

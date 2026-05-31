@@ -4,6 +4,8 @@ import com.techconnect.backend.model.DeveloperProfile;
 import com.techconnect.backend.model.LookingFor;
 import com.techconnect.backend.model.Sector;
 import com.techconnect.backend.model.SubscriptionTier;
+import com.techconnect.backend.model.Gender;
+import com.techconnect.backend.model.PreferredGender;
 import lombok.*;
 import java.util.*;
 
@@ -27,6 +29,8 @@ public class DeveloperProfileDto {
     private SubscriptionTier subscriptionTier;
     private String githubUsername;
     private Integer compatibilityScore;
+    private Gender gender;
+    private PreferredGender preferredGender;
 
     public static DeveloperProfileDto fromEntity(DeveloperProfile entity) {
         if (entity == null) return null;
@@ -45,6 +49,8 @@ public class DeveloperProfileDto {
                 .photoNames(entity.getPhotoNamesList())
                 .subscriptionTier(entity.getSubscriptionTier())
                 .githubUsername(entity.getGithubUsername())
+                .gender(entity.getGender())
+                .preferredGender(entity.getPreferredGender())
                 .build();
     }
 }

@@ -9,4 +9,6 @@ import java.util.*;
 public interface SwipeRepository extends JpaRepository<Swipe, UUID> {
     
     Optional<Swipe> findByLikerIdAndLikedId(UUID likerId, UUID likedId);
+    
+    long countByLikerIdAndSwipeTypeAndCreatedAtAfter(UUID likerId, com.techconnect.backend.model.SwipeType swipeType, java.time.LocalDateTime after);
 }

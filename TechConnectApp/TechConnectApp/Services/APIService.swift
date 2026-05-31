@@ -4,7 +4,7 @@ import Combine
 class APIService: ObservableObject {
     static let shared = APIService()
     
-    private let baseURL = "http://192.168.1.41:8080"
+    private let baseURL = "https://devmatch-u36s.onrender.com"
     private let tokenKey = "techconnect_jwt_token"
     
     private init() {}
@@ -68,9 +68,9 @@ class APIService: ObservableObject {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            if let errorMsg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let error = errorMsg["error"] as? String {
-                throw NSError(domain: "APIService", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: error])
+            if let errorMsg = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                let msg = (errorMsg["message"] as? String) ?? (errorMsg["error"] as? String) ?? "Unknown error"
+                throw NSError(domain: "APIService", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: msg])
             }
             throw URLError(.badServerResponse)
         }
@@ -315,6 +315,8 @@ struct RegisterRequestSwift: Codable {
     let isRemote: Bool
     let techStack: [String]
     let photoNames: [String]
+    let gender: Gender
+    let preferredGender: PreferredGender
 }
 
 struct CoffeeChatRequestSwift: Codable {

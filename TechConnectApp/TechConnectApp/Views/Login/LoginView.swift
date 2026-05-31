@@ -17,31 +17,12 @@ struct LoginView: View {
     @FocusState private var isFieldFocused: Bool
     
     var body: some View {
-        let startPoint: UnitPoint = startAnimation ? .topLeading : .bottomTrailing
-        let endPoint: UnitPoint = startAnimation ? .bottomTrailing : .topLeading
-        
-        return ZStack {
-            // Dark futuristic gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.1),
-                    Color(red: 0.1, green: 0.05, blue: 0.2),
-                    Color(red: 0.02, green: 0.02, blue: 0.05)
-                ],
-                startPoint: startPoint,
-                endPoint: endPoint
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.linear(duration: 8).repeatForever(autoreverses: true)) {
-                    startAnimation.toggle()
-                }
-                withAnimation(.easeOut(duration: 0.8).delay(0.2)) {
-                    showPanel = true
-                }
-            }
+        ZStack {
+            // Clean professional dark background
+            Color(red: 0.08, green: 0.09, blue: 0.12)
+                .ignoresSafeArea()
             
-            // Glowing ambient shapes
+            // Faint subtle background ambient light
             glowingAmbientShapes
             
             ScrollView(showsIndicators: false) {
@@ -75,57 +56,42 @@ struct LoginView: View {
     // MARK: - Subviews
     
     private var glowingAmbientShapes: some View {
-        Group {
-            Circle()
-                .fill(Color.purple.opacity(0.3))
-                .frame(width: 300, height: 300)
-                .blur(radius: 80)
-                .offset(x: startAnimation ? -100 : 100, y: startAnimation ? -200 : 200)
-            
-            Circle()
-                .fill(Color.blue.opacity(0.25))
-                .frame(width: 250, height: 250)
-                .blur(radius: 80)
-                .offset(x: startAnimation ? 120 : -120, y: startAnimation ? 180 : -180)
-        }
+        Circle()
+            .fill(Color.purple.opacity(0.04))
+            .frame(width: 300, height: 300)
+            .blur(radius: 100)
+            .offset(x: -60, y: -100)
     }
     
     private var brandSection: some View {
         VStack(spacing: isFieldFocused ? 4 : 15) {
             if !isFieldFocused {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color.white.opacity(0.07))
-                        .frame(width: 90, height: 90)
+                    RoundedRectangle(cornerRadius: 22)
+                        .fill(Color.white.opacity(0.04))
+                        .frame(width: 80, height: 80)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 24)
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 22)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
                     
                     Image(systemName: "heart.text.square.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 50, height: 50)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.blue, .purple, .pink],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .frame(width: 44, height: 44)
+                        .foregroundColor(.indigo)
                 }
                 .transition(.scale.combined(with: .opacity))
             }
             
             Text("DevMatch")
-                .font(.system(size: isFieldFocused ? 26 : 38, weight: .bold, design: .rounded))
+                .font(.system(size: isFieldFocused ? 26 : 36, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
-                .shadow(color: .purple.opacity(0.5), radius: 10, x: 0, y: 5)
             
             if !isFieldFocused {
                 Text("Connect. Code. Collaborate.")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(.gray.opacity(0.8))
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundColor(.secondary)
                     .transition(.opacity)
             }
         }
@@ -137,7 +103,7 @@ struct LoginView: View {
             Image(systemName: "envelope.fill")
                 .foregroundColor(.purple)
                 .frame(width: 30)
-            TextField("", text: $email, prompt: Text(dataService.appLanguage == .turkish ? "E-posta Adresi" : "Email Address").foregroundColor(.white.opacity(0.4)))
+            TextField("", text: $email, prompt: Text(Localization.string("email_address", lang: dataService.appLanguage)).foregroundColor(.white.opacity(0.4)))
                 .foregroundColor(.white)
                 .autocapitalization(.none)
                 .keyboardType(.emailAddress)
@@ -157,7 +123,7 @@ struct LoginView: View {
             Image(systemName: "lock.fill")
                 .foregroundColor(.purple)
                 .frame(width: 30)
-            SecureField("", text: $password, prompt: Text(dataService.appLanguage == .turkish ? "Şifre" : "Password").foregroundColor(.white.opacity(0.4)))
+            SecureField("", text: $password, prompt: Text(Localization.string("password", lang: dataService.appLanguage)).foregroundColor(.white.opacity(0.4)))
                 .foregroundColor(.white)
                 .focused($isFieldFocused)
         }
@@ -189,36 +155,29 @@ struct LoginView: View {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 } else {
-                    Text(dataService.appLanguage == .turkish ? "Giriş Yap" : "Log In")
+                    Text(Localization.string("login_title", lang: dataService.appLanguage))
                         .fontWeight(.bold)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
-            .background(
-                LinearGradient(
-                    colors: [.purple, .blue],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
+            .background(Color.indigo)
             .foregroundColor(.white)
             .cornerRadius(12)
-            .shadow(color: .purple.opacity(0.4), radius: 8, x: 0, y: 4)
         }
         .disabled(isLoading)
     }
     
     private var signUpLink: some View {
         HStack(spacing: 5) {
-            Text(dataService.appLanguage == .turkish ? "Hesabınız yok mu?" : "Don't have an account?")
+            Text(Localization.string("dont_have_account", lang: dataService.appLanguage))
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.6))
             
             Button(action: {
                 showRegisterSheet = true
             }) {
-                Text(dataService.appLanguage == .turkish ? "Kayıt Ol" : "Sign Up")
+                Text(Localization.string("signup_title", lang: dataService.appLanguage))
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.purple)
             }
@@ -228,7 +187,7 @@ struct LoginView: View {
     
     private var loginPanelCard: some View {
         VStack(spacing: isFieldFocused ? 10 : 16) {
-            Text(dataService.appLanguage == .turkish ? "E-posta ile Giriş Yap" : "Login with Email")
+            Text(Localization.string("login_with_email", lang: dataService.appLanguage))
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -242,7 +201,7 @@ struct LoginView: View {
             HStack {
                 Color.white.opacity(0.12)
                     .frame(height: 1)
-                Text(dataService.appLanguage == .turkish ? "veya" : "or")
+                Text(Localization.string("or_text", lang: dataService.appLanguage))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white.opacity(0.4))
                 Color.white.opacity(0.12)
@@ -250,41 +209,25 @@ struct LoginView: View {
             }
             .padding(.vertical, 2)
             
-            // Social Login Buttons Stack (Horizontal)
-            HStack(spacing: 12) {
-                // GitHub Login Button
-                Button(action: handleGithubLogin) {
-                    HStack {
-                        Image(systemName: "terminal.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("GitHub")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color(red: 0.1, green: 0.1, blue: 0.13))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                    )
+            // Social Login Button (GitHub Only)
+            Button(action: handleGithubLogin) {
+                HStack(spacing: 10) {
+                    Image("github_logo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                    Text(Localization.string("login_github", lang: dataService.appLanguage))
+                        .font(.system(size: 15, weight: .bold))
                 }
-                
-                // Apple Login Button
-                Button(action: handleAppleLogin) {
-                    HStack {
-                        Image(systemName: "applelogo")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Apple")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.white)
-                    .foregroundColor(.black)
-                    .cornerRadius(12)
-                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color(red: 0.15, green: 0.15, blue: 0.18))
+                .foregroundColor(.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
             }
         }
         .padding(isFieldFocused ? 16 : 24)
@@ -320,7 +263,7 @@ struct LoginView: View {
     
     private func handleLogin() {
         guard !email.isEmpty && !password.isEmpty else {
-            errorMessage = dataService.appLanguage == .turkish ? "Lütfen tüm alanları doldurun." : "Please fill in all fields."
+            errorMessage = Localization.string("fill_all_fields_error", lang: dataService.appLanguage)
             return
         }
         
@@ -347,15 +290,7 @@ struct LoginView: View {
         }
     }
     
-    private func handleAppleLogin() {
-        performSocialLogin(provider: "Apple")
-    }
-    
     private func handleGithubLogin() {
-        performSocialLogin(provider: "GitHub")
-    }
-    
-    private func performSocialLogin(provider: String) {
         isLoading = true
         errorMessage = ""
         
