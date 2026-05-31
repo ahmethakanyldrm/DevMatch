@@ -4,7 +4,7 @@ import Combine
 class APIService: ObservableObject {
     static let shared = APIService()
     
-    private let baseURL = "http://192.168.1.41:8080"
+    private let baseURL = "https://devmatch-u36s.onrender.com"
     private let tokenKey = "techconnect_jwt_token"
     
     private init() {}

@@ -18,8 +18,8 @@ struct ProfileImageView: View {
         if name.lowercased().hasPrefix("http") {
             return URL(string: name)
         }
-        // Base backend URL for localhost is http://localhost:8080
-        return URL(string: "http://localhost:8080/uploads/\(name)")
+        // Base backend URL for live server
+        return URL(string: "https://devmatch-u36s.onrender.com/uploads/\(name)")
     }
     
     var body: some View {
