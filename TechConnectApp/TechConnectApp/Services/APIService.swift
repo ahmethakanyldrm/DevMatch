@@ -4,7 +4,7 @@ import Combine
 class APIService: ObservableObject {
     static let shared = APIService()
     
-    private let baseURL = "http://localhost:8080"
+    private let baseURL = "http://192.168.1.41:8080"
     private let tokenKey = "techconnect_jwt_token"
     
     private init() {}
@@ -207,6 +207,41 @@ class APIService: ObservableObject {
         
         let decoder = JSONDecoder()
         return try decoder.decode(DeveloperProfile.self, from: data)
+    }
+    
+    func deleteAccount() async throws {
+        guard let url = URL(string: "\(baseURL)/api/v1/profiles/me") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if let jwt = token {
+            request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        } else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+            clearToken()
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorMsg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorMsg["error"] as? String {
+                throw NSError(domain: "APIService", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: error])
+            }
+            throw URLError(.badServerResponse)
+        }
     }
     
     func getDiscoverDeck() async throws -> [DeveloperProfile] {

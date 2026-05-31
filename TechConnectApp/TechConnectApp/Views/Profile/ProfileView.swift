@@ -24,6 +24,13 @@ struct ProfileView: View {
     @State private var newTechText = ""
     @State private var showSaveAlert = false
     
+    // Modals & Alert states
+    @State private var showAboutSheet = false
+    @State private var showPrivacyPolicySheet = false
+    @State private var showTermsSheet = false
+    @State private var showContactSheet = false
+    @State private var showDeleteAccountAlert = false
+    
     // Dynamic Theme Helper colors for Light/Dark mode
     private var backgroundColor: Color {
         colorScheme == .dark ? Color(red: 0.05, green: 0.05, blue: 0.1) : Color(red: 0.96, green: 0.96, blue: 0.98)
@@ -63,7 +70,10 @@ struct ProfileView: View {
                         // 4. App Settings (Theme & Language) Card
                         settingsCard
                         
-                        // 5. Form inputs card
+                        // 5. Legal & Account settings
+                        legalAndAccountCard
+                        
+                        // 6. Form inputs card
                         profileInformationCard
                         
                         // 6. Tech tags card
@@ -107,6 +117,37 @@ struct ProfileView: View {
                         }
                     }
                 }
+            }
+            .sheet(isPresented: $showAboutSheet) {
+                aboutSheetView
+            }
+            .sheet(isPresented: $showPrivacyPolicySheet) {
+                privacyPolicySheetView
+            }
+            .sheet(isPresented: $showTermsSheet) {
+                termsSheetView
+            }
+            .sheet(isPresented: $showContactSheet) {
+                contactSheetView
+            }
+            .alert(
+                dataService.appLanguage == .turkish ? "Hesabımı Sil" : "Delete Account",
+                isPresented: $showDeleteAccountAlert
+            ) {
+                Button(dataService.appLanguage == .turkish ? "Vazgeç" : "Cancel", role: .cancel) { }
+                Button(dataService.appLanguage == .turkish ? "Evet, Sil" : "Yes, Delete", role: .destructive) {
+                    Task {
+                        do {
+                            try await dataService.deleteAccount()
+                        } catch {
+                            print("Failed to delete account: \(error)")
+                        }
+                    }
+                }
+            } message: {
+                Text(dataService.appLanguage == .turkish ? 
+                     "Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm eşleşmeleriniz ile mesajlarınız silinecektir." : 
+                     "Are you sure you want to delete your account? This action is permanent and will delete all matches and chats.")
             }
         }
     }
@@ -534,6 +575,281 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 30)
+    }
+    
+    @ViewBuilder
+    private var legalAndAccountCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(dataService.appLanguage == .turkish ? "Bilgi & Hesap" : "Info & Account")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+                .padding(.bottom, 4)
+            
+            // 1. Hakkında (About)
+            Button(action: { showAboutSheet = true }) {
+                HStack {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundColor(.purple)
+                    Text(dataService.appLanguage == .turkish ? "Uygulama Hakkında" : "About App")
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Divider().background(borderColor)
+            
+            // 2. Kullanım Koşulları (Terms of Use)
+            Button(action: { showTermsSheet = true }) {
+                HStack {
+                    Image(systemName: "doc.text.fill")
+                        .foregroundColor(.purple)
+                    Text(dataService.appLanguage == .turkish ? "Kullanım Koşulları" : "Terms of Use")
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Divider().background(borderColor)
+            
+            // 3. Gizlilik Politikası (Privacy Policy)
+            Button(action: { showPrivacyPolicySheet = true }) {
+                HStack {
+                    Image(systemName: "lock.shield.fill")
+                        .foregroundColor(.purple)
+                    Text(dataService.appLanguage == .turkish ? "Gizlilik Politikası" : "Privacy Policy")
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Divider().background(borderColor)
+            
+            // 4. Bize Ulaşın (Contact Us)
+            Button(action: { showContactSheet = true }) {
+                HStack {
+                    Image(systemName: "envelope.fill")
+                        .foregroundColor(.purple)
+                    Text(dataService.appLanguage == .turkish ? "Bize Ulaşın" : "Contact Us")
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Divider().background(borderColor)
+            
+            // 5. Çıkış Yap (Logout)
+            Button(action: {
+                dataService.logout()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .foregroundColor(.orange)
+                    Text(dataService.appLanguage == .turkish ? "Çıkış Yap" : "Log Out")
+                        .foregroundColor(.orange)
+                        .fontWeight(.semibold)
+                    Spacer()
+                }
+            }
+            
+            Divider().background(borderColor)
+            
+            // 6. Hesabı Sil (Delete Account)
+            Button(action: { showDeleteAccountAlert = true }) {
+                HStack {
+                    Image(systemName: "trash.fill")
+                        .foregroundColor(.red)
+                    Text(dataService.appLanguage == .turkish ? "Hesabımı Sil" : "Delete Account")
+                        .foregroundColor(.red)
+                        .fontWeight(.semibold)
+                    Spacer()
+                }
+            }
+        }
+        .padding(20)
+        .background(cardBackgroundColor)
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(borderColor, lineWidth: 1.5)
+        )
+        .padding(.horizontal, 20)
+    }
+    
+    @ViewBuilder
+    private var aboutSheetView: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    Image(systemName: "bolt.heart.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.purple)
+                        .padding(.top, 40)
+                    
+                    Text("DevMatch")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text("v1.0.0")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text(dataService.appLanguage == .turkish ? 
+                         "DevMatch, yazılımcı ve teknoloji profesyonellerinin ortak projeler geliştirmek, kahve sohbetleri yapmak veya mentörlük ilişkileri kurmak için birbirleriyle eşleşmesini sağlayan premium bir networking platformudur." :
+                         "DevMatch is a premium networking platform that allows developers and tech professionals to match for side projects, coffee chats, or mentor-mentee collaborations.")
+                        .font(.body)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                    
+                    Spacer()
+                }
+            }
+            .navigationTitle(dataService.appLanguage == .turkish ? "Hakkında" : "About")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showAboutSheet = false }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var termsSheetView: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(dataService.appLanguage == .turkish ? "1. Kabul Edilebilir Kullanım" : "1. Acceptable Use")
+                        .font(.headline)
+                    Text(dataService.appLanguage == .turkish ? 
+                         "DevMatch yalnızca bilişim, yazılım ve teknoloji çalışanları için tasarlanmıştır. Platformumuzda sahte profil oluşturmak veya diğer kullanıcıları rahatsız etmek yasaktır." :
+                         "DevMatch is exclusively designed for IT, software, and tech professionals. Creating fake profiles or harassing other users is strictly prohibited.")
+                    
+                    Text(dataService.appLanguage == .turkish ? "2. Hesap Sorumluluğu" : "2. Account Responsibility")
+                        .font(.headline)
+                    Text(dataService.appLanguage == .turkish ? 
+                         "Kullanıcılar hesaplarının güvenliğinden ve yaptıkları paylaşımlardan kendileri sorumludur. GitHub hesabınız doğrulanmış olmalıdır." :
+                         "Users are responsible for their account security and activities. A verified GitHub account is required.")
+                    
+                    Text(dataService.appLanguage == .turkish ? "3. Abonelik Koşulları" : "3. Subscription Terms")
+                        .font(.headline)
+                    Text(dataService.appLanguage == .turkish ? 
+                         "DevMatch PRO abonelikleri Apple App Store veya entegre faturalandırma sistemi aracılığıyla yönetilir. Satın alımlar iptal edilene kadar otomatik yenilenir." :
+                         "DevMatch PRO subscriptions are billed through Apple App Store or integrated processing. Auto-renews until cancelled.")
+                }
+                .padding(24)
+            }
+            .navigationTitle(dataService.appLanguage == .turkish ? "Kullanım Koşulları" : "Terms of Use")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showTermsSheet = false }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var privacyPolicySheetView: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(dataService.appLanguage == .turkish ? "1. Toplanan Veriler" : "1. Collected Data")
+                        .font(.headline)
+                    Text(dataService.appLanguage == .turkish ? 
+                         "Uygulamaya kayıt olurken verdiğiniz e-posta, ad soyad, rol, deneyim yılı, şehir ve yüklediğiniz profil resimleri güvenli bir şekilde PostgreSQL veritabanımızda saklanır." :
+                         "Your email, display name, role, experience, city, bio, and profile photos are securely stored in our PostgreSQL database.")
+                    
+                    Text(dataService.appLanguage == .turkish ? "2. GitHub Entegrasyonu" : "2. GitHub Integration")
+                        .font(.headline)
+                    Text(dataService.appLanguage == .turkish ? 
+                         "Verifikasyon amacıyla GitHub kullanıcı adınız sorgulanır. Şifreniz veya özel hesap bilgileriniz asla talep edilmez ve saklanmaz." :
+                         "Your GitHub username is queried for verification. We never request or store your GitHub credentials.")
+                    
+                    Text(dataService.appLanguage == .turkish ? "3. Veri Güvenliği" : "3. Data Security")
+                        .font(.headline)
+                    Text(dataService.appLanguage == .turkish ? 
+                         "Şifreniz BCrypt algoritması ile hash'lenerek saklanır. Verileriniz üçüncü şahıslarla asla paylaşılmaz." :
+                         "Passwords are cryptographically hashed using BCrypt. Your personal data is never shared with third parties.")
+                }
+                .padding(24)
+            }
+            .navigationTitle(dataService.appLanguage == .turkish ? "Gizlilik Politikası" : "Privacy Policy")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showPrivacyPolicySheet = false }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var contactSheetView: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image(systemName: "envelope.badge.shield.half.filled")
+                    .font(.system(size: 60))
+                    .foregroundColor(.purple)
+                    .padding(.top, 30)
+                
+                Text(dataService.appLanguage == .turkish ? "Bize Ulaşın" : "Contact Us")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text(dataService.appLanguage == .turkish ? 
+                     "Sorularınız, iş birliği talepleriniz veya destek ihtiyaçlarınız için bize e-posta yoluyla ulaşabilirsiniz." :
+                     "For any support requests, questions, or collaboration offers, feel free to reach out to us.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "envelope.fill")
+                            .foregroundColor(.purple)
+                        Text("support@devmatch.com")
+                            .fontWeight(.semibold)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(inputBackgroundColor)
+                    .cornerRadius(12)
+                    
+                    HStack {
+                        Image(systemName: "network")
+                            .foregroundColor(.purple)
+                        Text("www.devmatch.com")
+                            .fontWeight(.semibold)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(inputBackgroundColor)
+                    .cornerRadius(12)
+                }
+                .padding(.horizontal, 24)
+                
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(dataService.appLanguage == .turkish ? "Kapat" : "Close") { showContactSheet = false }
+                }
+            }
+        }
     }
 }
 

@@ -300,11 +300,17 @@ public class ProfileService {
             
             // Update profile with the new photo name
             profile.setPhotoNamesList(Collections.singletonList(newFilename));
-            profileRepository.save(profile);
             
-            return DeveloperProfileDto.fromEntity(profile);
+            return DeveloperProfileDto.fromEntity(profileRepository.save(profile));
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fotoğraf yüklenirken hata oluştu: " + e.getMessage(), e);
         }
+    }
+
+    @Transactional
+    public void deleteProfile(UUID userId) {
+        DeveloperProfile profile = profileRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı profili bulunamadı: " + userId));
+        profileRepository.delete(profile);
     }
 }

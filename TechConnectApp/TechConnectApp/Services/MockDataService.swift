@@ -188,4 +188,11 @@ class MockDataService: ObservableObject {
         self.messagesByMatch = [:]
         self.coffeeChatRequests = []
     }
+    
+    func deleteAccount() async throws {
+        try await APIService.shared.deleteAccount()
+        await MainActor.run {
+            self.logout()
+        }
+    }
 }

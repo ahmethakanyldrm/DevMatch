@@ -36,6 +36,12 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.uploadPhoto(userId, file));
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyProfile(@AuthenticationPrincipal UUID userId) {
+        profileService.deleteProfile(userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/discover")
     public ResponseEntity<List<DeveloperProfileDto>> getDiscoverDeck(@AuthenticationPrincipal UUID userId) {
         return ResponseEntity.ok(profileService.getDiscoverableProfiles(userId));
