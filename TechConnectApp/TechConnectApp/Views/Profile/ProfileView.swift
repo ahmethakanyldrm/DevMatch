@@ -498,7 +498,6 @@ struct ProfileView: View {
                     }
                 }
             }
-            }
         }
         .padding(20)
         .background(cardBackgroundColor)
