@@ -22,7 +22,6 @@ struct SplashView: View {
             withAnimation(.easeOut(duration: 1.2)) {
                 scale = 1.0
                 opacity = 1.0
-                glowOpacity = 1.0
             }
             
             // Wait and transition
