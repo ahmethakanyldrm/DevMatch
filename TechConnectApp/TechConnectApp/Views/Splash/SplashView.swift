@@ -40,23 +40,10 @@ struct SplashView: View {
                         )
                         .frame(width: 130, height: 130)
                     
-                    Image(systemName: "personalhotspot")
+                    Image("app_logo")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 65, height: 65)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.white, .blue.opacity(0.9)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    
-                    Image(systemName: "bolt.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.pink)
-                        .offset(x: 35, y: -35)
-                        .shadow(color: .pink, radius: 4)
+                        .frame(width: 80, height: 80)
                 }
                 .scaleEffect(scale)
                 .opacity(opacity)

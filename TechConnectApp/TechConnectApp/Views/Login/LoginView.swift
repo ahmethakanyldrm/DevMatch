@@ -51,6 +51,11 @@ struct LoginView: View {
         .sheet(isPresented: $showRegisterSheet) {
             RegisterView(isLoggedIn: $isLoggedIn)
         }
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2)) {
+                showPanel = true
+            }
+        }
     }
     
     // MARK: - Subviews
@@ -75,11 +80,10 @@ struct LoginView: View {
                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
                     
-                    Image(systemName: "heart.text.square.fill")
+                    Image("app_logo")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 44, height: 44)
-                        .foregroundColor(.indigo)
+                        .frame(width: 50, height: 50)
                 }
                 .transition(.scale.combined(with: .opacity))
             }
