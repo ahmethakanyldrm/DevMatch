@@ -96,4 +96,33 @@ public class SwipeService {
                 .match(null)
                 .build();
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<com.techconnect.backend.dto.DeveloperProfileDto> getIncomingLikes(UUID currentUserId) {
+        DeveloperProfile currentUser = profileRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("Profile not found: " + currentUserId));
+        
+        List<Swipe> incomingSwipes = swipeRepository.findIncomingLikes(currentUserId);
+        
+        boolean isPro = currentUser.getSubscriptionTier() == SubscriptionTier.PRO;
+        
+        return incomingSwipes.stream().map(swipe -> {
+            DeveloperProfile liker = swipe.getLiker();
+            com.techconnect.backend.dto.DeveloperProfileDto dto = com.techconnect.backend.dto.DeveloperProfileDto.fromEntity(liker);
+            
+            if (!isPro) {
+                dto.setDisplayName("Premium Geliştirici");
+                dto.setEmail("pro@devmatch.com");
+                dto.setRole("Yazılım Geliştirici");
+                dto.setBio("Seni beğenen geliştiricinin detaylarını görmek ve anında eşleşmek için PRO'ya geç!");
+                dto.setCity("Gizli");
+                dto.setGithubUsername(null);
+                dto.setTechStack(Arrays.asList("Swift", "Java", "Go", "Docker"));
+                dto.setPhotoNames(Collections.singletonList("lock.fill"));
+                dto.setExperienceYears(0);
+            }
+            
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+    }
 }

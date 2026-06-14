@@ -43,6 +43,7 @@ class APIService: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
         
         if requiresAuth {
             if let jwt = token {
@@ -293,6 +294,10 @@ class APIService: ObservableObject {
         ]
         let bodyData = try JSONSerialization.data(withJSONObject: payload)
         return try await makeRequest(path: "/api/v1/coffee-chats", method: "POST", body: bodyData)
+    }
+    
+    func getIncomingLikes() async throws -> [DeveloperProfile] {
+        try await makeRequest(path: "/api/v1/swipes/incoming", method: "GET")
     }
 }
 

@@ -22,4 +22,10 @@ public class SwipeController {
             @RequestBody SwipeRequest request) {
         return ResponseEntity.ok(swipeService.swipe(userId, request));
     }
+
+    @GetMapping("/incoming")
+    public ResponseEntity<java.util.List<com.techconnect.backend.dto.DeveloperProfileDto>> getIncomingLikes(
+            @AuthenticationPrincipal UUID userId) {
+        return ResponseEntity.ok(swipeService.getIncomingLikes(userId));
+    }
 }

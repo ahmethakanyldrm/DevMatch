@@ -32,6 +32,15 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
+            IncomingLikesView()
+                .tabItem {
+                    Label(
+                        Localization.string("likes", lang: dataService.appLanguage),
+                        systemImage: "heart.square.fill"
+                    )
+                }
+                .tag(1)
+            
             ChatsListView()
                 .tabItem {
                     Label(
@@ -39,7 +48,7 @@ struct MainTabView: View {
                         systemImage: "bubble.left.and.bubble.right.fill"
                     )
                 }
-                .tag(1)
+                .tag(2)
             
             ProfileView()
                 .tabItem {
@@ -48,7 +57,7 @@ struct MainTabView: View {
                         systemImage: "person.crop.circle.fill"
                     )
                 }
-                .tag(2)
+                .tag(3)
         }
         .tint(.purple)
     }

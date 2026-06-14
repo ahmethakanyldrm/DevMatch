@@ -401,7 +401,7 @@ struct RegisterView: View {
                 } catch {
                     await MainActor.run {
                         isLoading = false
-                        errorMessage = error.localizedDescription
+                        errorMessage = Localization.localizedError(error, lang: dataService.appLanguage)
                     }
                 }
             }

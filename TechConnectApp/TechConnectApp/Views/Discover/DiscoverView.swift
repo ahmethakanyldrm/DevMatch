@@ -7,6 +7,23 @@ struct DiscoverView: View {
     @State private var swipeStates: [UUID: CGFloat] = [:] // Keeps track of translation X for each card
     @State private var showMatchOverlay = false
     @State private var matchedProfile: DeveloperProfile? = nil
+    @AppStorage("swiped_profile_ids") private var swipedProfileIdsData = ""
+    
+    private var swipedProfileIds: Set<UUID> {
+        get {
+            let ids = swipedProfileIdsData.split(separator: ",").compactMap { UUID(uuidString: String($0)) }
+            return Set(ids)
+        }
+        set {
+            let stringArray = newValue.map { $0.uuidString }
+            swipedProfileIdsData = stringArray.joined(separator: ",")
+        }
+    }
+    
+    private func updateActiveProfiles() {
+        let swiped = swipedProfileIds
+        activeProfiles = dataService.profiles.filter { !swiped.contains($0.id) }
+    }
     
     private var backgroundColor: Color {
         colorScheme == .dark ? Color(red: 0.05, green: 0.05, blue: 0.1) : Color(red: 0.96, green: 0.96, blue: 0.98)
@@ -31,7 +48,7 @@ struct DiscoverView: View {
                         Task {
                             await dataService.fetchDiscoverDeck()
                             await MainActor.run {
-                                activeProfiles = dataService.profiles
+                                updateActiveProfiles()
                             }
                         }
                     }) {
@@ -75,7 +92,7 @@ struct DiscoverView: View {
                                 Task {
                                     await dataService.fetchDiscoverDeck()
                                     await MainActor.run {
-                                        activeProfiles = dataService.profiles
+                                        updateActiveProfiles()
                                     }
                                 }
                             }) {
@@ -206,13 +223,17 @@ struct DiscoverView: View {
             Task {
                 await dataService.fetchDiscoverDeck()
                 await MainActor.run {
-                    activeProfiles = dataService.profiles
+                    updateActiveProfiles()
                 }
             }
         }
     }
     
     private func swipeCard(profile: DeveloperProfile, right: Bool) {
+        var swiped = swipedProfileIds
+        swiped.insert(profile.id)
+        swipedProfileIds = swiped
+        
         withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
             swipeStates[profile.id] = right ? 500 : -500
         }

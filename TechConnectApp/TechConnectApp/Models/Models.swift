@@ -360,6 +360,54 @@ enum AppLanguage: String, CaseIterable, Identifiable, Codable {
 }
 
 struct Localization {
+    static func localizedError(_ error: Error, lang: AppLanguage) -> String {
+        let nsError = error as NSError
+        
+        if nsError.domain == NSURLErrorDomain {
+            switch nsError.code {
+            case -1001:
+                return lang == .turkish 
+                    ? "Sunucu bağlantısı zaman aşımına uğradı. Sunucu uyanıyor olabilir (soğuk başlatma 50 saniye sürebilir), lütfen birazdan tekrar deneyin." 
+                    : "The request timed out. The server might be waking up (cold start can take up to 50s), please try again shortly."
+            case -1004:
+                return lang == .turkish 
+                    ? "Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin." 
+                    : "Could not connect to the server. Please check your internet connection."
+            case -1009:
+                return lang == .turkish 
+                    ? "İnternet bağlantınız bulunmuyor. Lütfen bağlantınızı kontrol edin." 
+                    : "No internet connection available. Please check your connection."
+            default:
+                break
+            }
+        }
+        
+        let message = nsError.localizedDescription
+        
+        if lang == .turkish {
+            if message.contains("timed out") {
+                return "Sunucu bağlantısı zaman aşımına uğradı. Lütfen tekrar deneyin."
+            }
+            if message.contains("400") || message.contains("Bad Request") {
+                return "Geçersiz istek. Lütfen alanları kontrol edin."
+            }
+            if message.contains("403") || message.contains("Forbidden") {
+                return "Erişim reddedildi. Lütfen bilgilerinizi kontrol edin."
+            }
+            if message.contains("409") || message.contains("Conflict") {
+                return "Bu e-posta veya GitHub kullanıcı adı zaten kayıtlı."
+            }
+            if message.contains("GitHub kullanıcı adı zorunludur") {
+                return "GitHub kullanıcı adı zorunludur."
+            }
+            if message.contains("E-posta veya şifre hatalı") {
+                return "E-posta veya şifre hatalı."
+            }
+        }
+        
+        return message
+    }
+
     static func string(_ key: String, lang: AppLanguage) -> String {
         let translations: [AppLanguage: [String: String]] = [
             .turkish: [
@@ -428,6 +476,11 @@ struct Localization {
                 "next": "İleri",
                 // Newly added keys for full view localizations
                 "signup_title": "Kayıt Ol",
+                "likes": "Beğeniler",
+                "likes_desc": "Seni Beğenenler",
+                "likes_blur_message": "Seni beğenen diğer yazılımcıları görmek ve anında eşleşmek için PRO'ya yüksel!",
+                "likes_empty": "Henüz Beğeni Yok",
+                "likes_empty_desc": "Profilini doldurarak ve aktif olarak kaydırarak diğer geliştiricilerin ilgisini çekebilirsin.",
                 "complete_register": "Kaydı Tamamla",
                 "continue_btn": "İlerle",
                 "example_name": "Örn: Ahmet",
@@ -570,6 +623,11 @@ struct Localization {
                 "get_started": "Get Started",
                 "next": "Next",
                 "signup_title": "Sign Up",
+                "likes": "Likes",
+                "likes_desc": "Who Liked You",
+                "likes_blur_message": "Upgrade to PRO to see other developers who liked you and match instantly!",
+                "likes_empty": "No Likes Yet",
+                "likes_empty_desc": "Keep your profile updated and swipe actively to get noticed by other developers.",
                 "complete_register": "Complete Register",
                 "continue_btn": "Continue",
                 "example_name": "e.g. Ahmet",

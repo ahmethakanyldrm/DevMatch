@@ -288,7 +288,7 @@ struct LoginView: View {
             } catch {
                 await MainActor.run {
                     isLoading = false
-                    errorMessage = error.localizedDescription
+                    errorMessage = Localization.localizedError(error, lang: dataService.appLanguage)
                 }
             }
         }
@@ -312,7 +312,7 @@ struct LoginView: View {
             } catch {
                 await MainActor.run {
                     isLoading = false
-                    errorMessage = error.localizedDescription
+                    errorMessage = Localization.localizedError(error, lang: dataService.appLanguage)
                 }
             }
         }
